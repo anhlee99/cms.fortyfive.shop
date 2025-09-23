@@ -8,7 +8,6 @@ import {
   Command,
   Frame,
   GalleryVerticalEnd,
-  Map,
   PieChart,
   Settings2,
   SquareTerminal,
@@ -17,7 +16,6 @@ import {
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
 import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
@@ -190,7 +188,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
           }),
         [pathname]
       );
-      
+
     return (
         <Sidebar collapsible="icon" {...props}>
         <SidebarHeader>
