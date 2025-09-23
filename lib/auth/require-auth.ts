@@ -3,7 +3,7 @@ import 'server-only'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import type { User as SupaUser } from '@supabase/supabase-js'
-import type { User as AppUser } from '@/types/user'
+import type { User as AppUser, UserClaims } from '@/types/user'
 
 type Options = {
   redirectTo?: string
@@ -11,12 +11,11 @@ type Options = {
   unauthorizedTo?: string
 }
 
-type Claims = Record<string, unknown>
 
 export type RequireAuthResult = {
   supabase: Awaited<ReturnType<typeof createClient>>
   user: AppUser
-  claims?: Claims
+  claims?: UserClaims
 }
 
 function toAppUser(u: SupaUser): AppUser {
@@ -52,7 +51,7 @@ export async function requireAuth(opts: Options = {}): Promise<RequireAuthResult
   if (opts.requireClaims) {
     const needed = Array.isArray(opts.requireClaims) ? opts.requireClaims : [opts.requireClaims]
     const { data: claimsData, error: claimsErr } = await supabase.auth.getClaims()
-    const claims = claimsData?.claims as Claims | undefined
+    const claims = claimsData?.claims as UserClaims | undefined
 
     const ok = !claimsErr && needed.every((k) => Boolean(claims?.[k]))
     if (!ok) redirect(unauthorizedTo) // never returns
@@ -61,4 +60,27 @@ export async function requireAuth(opts: Options = {}): Promise<RequireAuthResult
   }
 
   return { supabase, user: toAppUser(user) }
+}
+
+export async function requireSession(opts: Options = {}) {
+  const redirectTo = opts.redirectTo ?? '/auth/login'
+  const unauthorizedTo = opts.unauthorizedTo ?? '/auth/error'
+
+  const supabase = await createClient()
+
+  // Fast path: decode JWT locally (no network)
+  const { data: claimsData } = await supabase.auth.getClaims()
+  const claims = claimsData?.claims as UserClaims | undefined
+
+  // No valid token → redirect
+  if (!claims) redirect(redirectTo)
+
+  // Optional claims gating
+  if (opts.requireClaims) {
+    const needed = Array.isArray(opts.requireClaims) ? opts.requireClaims : [opts.requireClaims]
+    const ok = needed.every((k) => Boolean(claims?.[k]))
+    if (!ok) redirect(unauthorizedTo)
+  }
+
+  return { supabase, claims }
 }

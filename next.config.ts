@@ -4,7 +4,13 @@ const nextConfig: NextConfig = {
   /* config options here */
   // tải hình ảnh từ cms.fortyfive.shop và localhost
   images: {
-    domains: ['cms.fortyfive.shop', 'localhost'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'cms.fortyfive.shop',
+        pathname: '/**',
+      },
+    ]
   },
 };
 

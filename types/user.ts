@@ -4,3 +4,9 @@ export type User = {
   email?: string;
   avatarUrl?: string;
 };
+
+export type UserClaims = {
+  email?: string
+  is_admin?: boolean
+  [k: string]: unknown
+}

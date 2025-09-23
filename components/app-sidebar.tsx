@@ -12,6 +12,8 @@ import {
   PieChart,
   Settings2,
   SquareTerminal,
+  Apple,
+  Layers,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -25,16 +27,15 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import { User } from "@/types/user"
+import { usePathname } from "next/navigation";
+import { NavItem } from "@/components/nav-main";
 // This is sample data.
+
+
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   teams: [
     {
-      name: "Acme Inc",
+      name: "Shop 1",
       logo: GalleryVerticalEnd,
       plan: "Enterprise",
     },
@@ -51,63 +52,71 @@ const data = {
   ],
   navMain: [
     {
-      title: "Playground",
-      url: "#",
+      title: "Dashboard",
+      url: "/dashboards",
       icon: SquareTerminal,
       isActive: true,
-      items: [
-        {
-          title: "History",
-          url: "#",
-        },
-        {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
-        },
-      ],
     },
     {
-      title: "Models",
-      url: "#",
-      icon: Bot,
-      items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Documentation",
+      title: "Đơn hàng",
       url: "#",
       icon: BookOpen,
       items: [
         {
-          title: "Introduction",
+          title: "Danh sách",
           url: "#",
         },
         {
-          title: "Get Started",
+          title: "Tạo mới",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Khách hàng",
+      url: "#",
+      icon: Bot,
+      items: [
+        {
+          title: "Danh sách",
+          url: "/customers",
+        },
+        {
+          title: "Tạo mới",
+          url: "/customers/new",
+        },
+        {
+          title: "Tag khách hàng",
+          url: "/customers/tags",
+        },
+      ],
+    },
+    {
+      title: "Sản phẩm",
+      url: "#",
+      icon: Apple,
+      items: [
+        {
+          title: "Danh sách",
           url: "#",
         },
         {
-          title: "Tutorials",
+          title: "Tạo mới",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Kho hàng",
+      url: "#",
+      icon: Layers,
+      items: [
+        {
+          title: "Danh sách",
           url: "#",
         },
         {
-          title: "Changelog",
+          title: "Tạo mới",
           url: "#",
         },
       ],
@@ -138,7 +147,7 @@ const data = {
   ],
   projects: [
     {
-      name: "Design Engineering",
+      name: "Dashboard",
       url: "#",
       icon: Frame,
     },
@@ -147,11 +156,11 @@ const data = {
       url: "#",
       icon: PieChart,
     },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
-    },
+    // {
+    //   name: "Travel",
+    //   url: "#",
+    //   icon: Map,
+    // },
   ],
 }
 
@@ -162,19 +171,46 @@ type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
 
 // add user prop to AppSidebar props and pass it to TeamSwitcher
 export function AppSidebar({ user, ...props }: AppSidebarProps) {
+    const pathname = usePathname();
+    const navItems: NavItem[] = React.useMemo(
+        () =>
+          data.navMain.map((item) => {
+            const active =
+              normalize(pathname) === normalize(item.url) ||
+              item.items?.some((s) => pathStartsWith(normalize(pathname), normalize(s.url)));
+            
+              if (active) {
+                // If the item is active, set all its sub-items to inactive
+                item.items = item.items?.map((subItem) => ({
+                  ...subItem,
+                  isActive: false,
+                }));
+              }
+            return { ...item, isActive: active };
+          }),
+        [pathname]
+      );
+      
     return (
         <Sidebar collapsible="icon" {...props}>
         <SidebarHeader>
             {/* <TeamSwitcher teams={data.teams} /> */}
         </SidebarHeader>
         <SidebarContent>
-            <NavMain items={data.navMain} />
-            <NavProjects projects={data.projects} />
+          <NavMain items={navItems} />
+          {/* <NavProjects projects={data.projects} /> */}
         </SidebarContent>
         <SidebarFooter>
-            <NavUser user={user} />
+          <NavUser user={user} />
         </SidebarFooter>
         <SidebarRail />
         </Sidebar>
     )
+}
+
+function normalize(p: string) {
+  return p.replace(/\/+$/, "") || "/"; // remove trailing slash
+}
+function pathStartsWith(path: string, base: string) {
+  return path === base || path.startsWith(base + "/");
 }

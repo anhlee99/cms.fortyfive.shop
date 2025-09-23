@@ -11,7 +11,7 @@ export default function Home() {
           <div className="tw-w-full tw-max-w-5xl tw-flex tw-justify-between tw-items-center tw-p-3 tw-px-5 tw-text-sm">
             <div className="tw-flex tw-gap-5 tw-items-center tw-font-semibold">
               {/* <Link href={"/"}>FortyFive</Link> */}
-              <Image src="/images/logo.png" alt="FortyFive" className="tw-h-[10rem] w-auto" />
+              <Image src="/images/logo.png" alt="FortyFive"  width={130} height={130} priority sizes="(max-width: 768px) 160px, 400px" />
             </div>
             <div className="tw-flex tw-gap-3 tw-items-center">
               <AuthButton />

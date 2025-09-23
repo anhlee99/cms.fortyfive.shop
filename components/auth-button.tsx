@@ -1,19 +1,19 @@
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { createClient } from "@/lib/supabase/server";
 import { LogoutButton } from "./logout-button";
+import { requireSession } from "@/lib/auth/require-auth";
 
 export async function AuthButton() {
-  const supabase = await createClient();
 
   // You can also use getUser() which will be slower.
-  const { data } = await supabase.auth.getClaims();
+  const { claims } = await requireSession()
 
-  const user = data?.claims;
-
-  return user ? (
+  return claims ? (
     <div className="tw-flex tw-items-center tw-gap-4">
-      Hey, {user.email}!
+      Hey, {claims.email}!
+      <Button asChild variant={"outline"}>
+        <Link href="/dashboards">Dashboard</Link>
+      </Button>
       <LogoutButton />
     </div>
   ) : (
