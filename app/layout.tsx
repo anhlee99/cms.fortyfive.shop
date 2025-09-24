@@ -11,6 +11,12 @@ export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
   title: "FortyFive - Nền tảng quản lý bán hàng đa kênh",
   description: "Nền tảng quản lý bán hàng đa kênh",
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },   // if using public/favicon.ico
+    ],
+    shortcut: "/favicon.ico",
+  },
 };
 
 const geistSans = Geist({
