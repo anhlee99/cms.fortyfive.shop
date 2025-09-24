@@ -11,14 +11,13 @@ type Options = {
   unauthorizedTo?: string
 }
 
-
 export type RequireAuthResult = {
   supabase: Awaited<ReturnType<typeof createClient>>
   user: AppUser
   claims?: UserClaims
 }
 
-function toAppUser(u: SupaUser): AppUser {
+export function toAppUser(u: SupaUser): AppUser {
   const meta = u.user_metadata ?? {}
   const name = typeof (meta as Record<string, unknown>).name === 'string'
     ? (meta as Record<string, unknown>).name as string
@@ -35,6 +34,14 @@ function toAppUser(u: SupaUser): AppUser {
     avatarUrl,
   }
 }
+
+function toAppUserFromClaims(claims: UserClaims): AppUser {
+  return {
+    id: claims.sub,
+    name: claims.name ?? '',
+    email: claims.email ?? '',
+  }
+} 
 
 /** Call inside any Server Component/page/layout */
 export async function requireAuth(opts: Options = {}): Promise<RequireAuthResult> {
@@ -82,5 +89,5 @@ export async function requireSession(opts: Options = {}) {
     if (!ok) redirect(unauthorizedTo)
   }
 
-  return { supabase, claims }
+  return { supabase, user: toAppUserFromClaims(claims), claims }
 }

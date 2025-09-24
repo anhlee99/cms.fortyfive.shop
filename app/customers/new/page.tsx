@@ -13,7 +13,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { requireAuth } from '@/lib/auth/require-auth'
+import { requireAuth } from '@/lib/auth'
 
 export default async function Page() {
     const { user } = await requireAuth()

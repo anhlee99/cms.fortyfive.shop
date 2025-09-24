@@ -57,3 +57,5 @@ types/                     # Global types
 
 styles/                    # Tailwind/global CSS
 └── globals.css
+
+DB (Supabase) ⟶ Service (server) ⟶ API Route (GET/POST /api/shops) ⟶ Browser fetchers (shop.api.ts) ⟶ Hook (useShops) ⟶ UI (Table + Create form).

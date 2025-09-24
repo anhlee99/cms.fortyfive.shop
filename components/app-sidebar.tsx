@@ -120,6 +120,21 @@ const data = {
       ],
     },
     {
+      title: "Cửa hàng",
+      url: "#",
+      icon: Layers,
+      items: [
+        {
+          title: "Danh sách",
+          url: "/shops",
+        },
+        {
+          title: "Tạo mới",
+          url: "/shops/new",
+        },
+      ],
+    },
+    {
       title: "Settings",
       url: "#",
       icon: Settings2,

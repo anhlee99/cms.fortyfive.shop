@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { LogoutButton } from "./logout-button";
-import { requireSession } from "@/lib/auth/require-auth";
+import { requireSession } from "@/lib/auth";
 
 export async function AuthButton() {
 

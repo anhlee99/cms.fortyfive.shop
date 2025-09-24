@@ -1,16 +1,47 @@
 import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { Database } from "./database.types";
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY!;
 
 /**
  * Especially important if using Fluid compute: Don't put this client in a
  * global variable. Always create a new client within each function when using
  * it.
  */
-export async function createClient() {
+
+
+function getAccessToken(headers: Headers) {
+  const authHeader = headers.get("authorization") || headers.get("Authorization");
+  return (
+    authHeader && authHeader.toLowerCase().startsWith("bearer ")
+      ? authHeader.slice(7)
+      : null
+  );
+}
+
+
+export async function createClient(initToken?: string) {
+  // 1) Try Bearer token first (API/mobile/watch friendly)
+  let accessToken: string | null = initToken || null;
+  if (!accessToken) {
+    const h = await headers();
+    accessToken = getAccessToken(h);
+  }
+  if (accessToken) {
+    return createSupabaseClient<Database>(SUPABASE_URL, SUPABASE_ANON, {
+        global: { headers: { Authorization: `Bearer ${accessToken}` } },
+        auth: { persistSession: false, autoRefreshToken: false },
+    });
+  }
+
+  // 2) Fallback to cookies (SSR/RSC pages)
   const cookieStore = await cookies();
 
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY!,
     {
       cookies: {

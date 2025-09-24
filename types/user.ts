@@ -6,6 +6,8 @@ export type User = {
 };
 
 export type UserClaims = {
+  sub: string
+  name?: string
   email?: string
   is_admin?: boolean
   [k: string]: unknown

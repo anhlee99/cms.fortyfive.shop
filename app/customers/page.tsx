@@ -13,10 +13,10 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { requireAuth } from '@/lib/auth/require-auth'
+import { requireSession } from '@/lib/auth'
 
 export default async function Page() {
-    const { user } = await requireAuth()
+    const { user } = await requireSession()
 
     return (
       <SidebarProvider>

@@ -1,4 +1,4 @@
-import { AuthButton } from "@/components/auth-button";
+import { AuthButton } from "@/components/auth/auth-button";
 import { Hero } from "@/components/hero";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import Image from 'next/image'
