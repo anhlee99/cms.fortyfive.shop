@@ -9,14 +9,12 @@ export default function CreateShop() {
     const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
 
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
         setLoading(true);
         try {
             await newShop({ 
-                user_id: "1", // TODO: replace with actual user id
                 name,
                 status: "active",
              });

@@ -42,7 +42,7 @@ export async function createClient(initToken?: string) {
 
   return createServerClient(
     SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY!,
+    SUPABASE_ANON,
     {
       cookies: {
         getAll() {

@@ -16,7 +16,7 @@ export interface ShopSearchParams extends SearchParams {
 };
 
 export interface CreateShopDTO {
-    user_id: string;
+    user_id?: string;
     name: string;
     status: ShopStatus;
 }
