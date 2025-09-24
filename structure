@@ -1,0 +1,59 @@
+app/                       # Next.js app router
+├── layout.tsx
+├── page.tsx               # Home page
+├── (marketing)/...         # Public routes
+├── dashboard/              # Authenticated area
+│   ├── page.tsx
+│   ├── orders/
+│   │   ├── page.tsx
+│   │   └── [id]/page.tsx
+│   ├── customers/
+│   │   └── page.tsx
+│   └── products/
+│       └── page.tsx
+└── api/                   # Next.js Route Handlers
+    ├── orders/
+    │   └── route.ts
+    ├── customers/
+    │   └── route.ts
+    └── products/
+        └── route.ts
+
+lib/                       # Shared libraries
+├── supabase/
+│   ├── client.ts          # createClientComponentClient
+│   ├── server.ts          # createServerComponentClient
+│   └── service.ts         # for admin/service_key if needed
+├── auth.ts                # helpers for auth
+└── utils.ts
+
+services/                  # Business logic per domain
+├── orders/
+│   ├── order.api.ts       # API calls (REST or RPC)
+│   ├── order.service.ts   # Business logic (combine queries, validations)
+│   └── order.types.ts     # Types/interfaces
+├── customers/
+│   ├── customer.api.ts
+│   ├── customer.service.ts
+│   └── customer.types.ts
+└── products/
+    ├── product.api.ts
+    ├── product.service.ts
+    └── product.types.ts
+
+components/                # Reusable UI
+├── ui/                    # Generic UI (buttons, inputs…)
+├── orders/                # Order-specific components
+├── customers/
+└── products/
+
+hooks/                     # React hooks
+├── useOrders.ts
+├── useCustomers.ts
+└── useProducts.ts
+
+types/                     # Global types
+└── index.ts
+
+styles/                    # Tailwind/global CSS
+└── globals.css
