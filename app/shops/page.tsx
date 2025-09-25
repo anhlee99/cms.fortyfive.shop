@@ -7,13 +7,10 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { requireSession } from '@/lib/auth'
-// import { listShops } from "@/services/shops/shop.service";
 import ShopSections from "@/components/shops/shop-sections";
 
 export default async function Page() {
     const { user } = await requireSession()
-    // const initial = await listShops();
-
     return (
       <SidebarProvider>
         <AppSidebar
@@ -28,7 +25,7 @@ export default async function Page() {
           </div>
         </header>
          <div className="tw-flex tw-flex-1 tw-flex-col tw-gap-4 tw-p-4 tw-pt-0">
-          <ShopSections initial={[]} />
+          <ShopSections/>
         </div>
       </SidebarInset>
       </SidebarProvider>

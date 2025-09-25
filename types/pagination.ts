@@ -72,17 +72,23 @@ export function getSearchParamsFromUrl<T extends object = {}>(
   };
 
   // --- Robust sort parsing ---
-  // Supports: sort[field]=asc and ignores other keys.
-  sp.forEach((value, key) => {
-    const sortMatch = key.match(/^sort\[(.+?)\]$/);
-    if (sortMatch) {
-      const field = sortMatch[1];
-      const dir = value.toLowerCase() as SortDir;
-      if (dir === "asc" || dir === "desc") {
-        (params.sort ??= []).push({ field, dir });
+  // Supports: sort=[{"field":"created_at","dir":"desc"}].
+  const sortStr = sp.get("sort");
+  if (sortStr) {
+    try {
+      const sortArr = JSON.parse(sortStr);
+      if (Array.isArray(sortArr)) {
+        for (const s of sortArr) {
+          if (s && typeof s === "object" && typeof s.field === "string") {
+            const dir = s.dir === "asc" ? "asc" : "desc";
+            params.sort!.push({ field: s.field, dir });
+          }
+        }
       }
+    } catch (e) {
+      // ignore malformed sort
     }
-  });
+  }
 
   // --- Robust filter parsing ---
   // Supports:

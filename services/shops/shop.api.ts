@@ -4,7 +4,6 @@ import { PaginatedResponse } from "@/types/pagination";
 
 const http = createHttp({});
 
-
 function toQuery(params: ShopSearchParams = {}) {
   const qs = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => {
@@ -19,9 +18,7 @@ function toQuery(params: ShopSearchParams = {}) {
 
 export async function fetchShops(params?: ShopSearchParams): Promise<PaginatedResponse<Shop>> {
   try {
-    const res = await http.get<PaginatedResponse<Shop>>(`/api/shops${toQuery(params)}`, {cache: "no-store"});
-
-    return res;
+    return await http.get<PaginatedResponse<Shop>>(`/api/shops${toQuery(params)}`, {cache: "no-store"});
   } catch (error) {
       throw new Error("Failed to fetch shops");
   }

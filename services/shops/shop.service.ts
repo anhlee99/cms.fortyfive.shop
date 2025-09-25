@@ -2,16 +2,6 @@ import type { Shop, CreateShopDTO, ShopSearchParams } from "./shop.type";
 import { createClient } from "@/lib/supabase/server";
 import { PaginatedResponse } from "@/types/pagination";
 
-// export async function listShops(searchParams?: ShopSearchParams): Promise<Shop[]> {
-//   const supabase = await createClient();
-//   const { data, error } = await supabase
-//     .from("shops")
-//     .select("*")
-//     .order("created_at", { ascending: false });
-//   if (error) throw error;
-//   return data ;
-// }
-
 export async function listShops(params: ShopSearchParams): Promise<PaginatedResponse<Shop>> {
   const supabase = await createClient();
   
@@ -21,10 +11,16 @@ export async function listShops(params: ShopSearchParams): Promise<PaginatedResp
 
   let query = supabase
     .from("shops")
-    .select("*", { count: 'exact' }) // returns { data, count }
-    // .order(params.sort ?? "created_at", { ascending: (params.dir ?? "desc") === "asc" })
-    // .ilike("status", params.status ?? "%")
-    // .range(offset, offset + limit - 1);
+    .select("*", { count: 'exact' }); // returns { data, count }
+
+  // sorting
+  if (params.sort && params.sort.length > 0) {
+    params.sort.forEach(s => {
+      if (s.field) {
+        query = query.order(s.field, { ascending: s.dir === "asc" });
+      }
+    });
+  }
 
     // basic text search
   if (params.q && params.q.trim()) {

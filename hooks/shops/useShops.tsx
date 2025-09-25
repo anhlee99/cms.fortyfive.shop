@@ -1,9 +1,9 @@
 "use client";
 import useSWR from "swr";
+import { PaginatedResponse } from "@/types/pagination";
 import { Shop, CreateShopDTO, ShopSearchParams } from "@/services/shops/shop.type";
 import { fetchShops, createShop, fetchShopById } from "@/services/shops/shop.api";
 import { useShopSearchUrl, normalizeSearch } from "./useShopsSearch";
-import { PaginatedResponse } from "@/types/pagination";
 
 function keyFromParams(params?: ShopSearchParams) {
   const p = normalizeSearch(params);
@@ -37,7 +37,7 @@ export function useShops(initialData?: PaginatedResponse<Shop>) {
     return {
         data,
         isLoading,
-        isError: error,
+        error,
         mutate,
         newShop,
         getShop,
