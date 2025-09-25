@@ -42,27 +42,25 @@ export function TeamSwitcher({
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:tw-bg-sidebar-accent data-[state=open]:tw-text-sidebar-accent-foreground"
+              className="tw-data-[state=open]:tw-bg-sidebar-accent tw-data-[state=open]:tw-text-sidebar-accent-foreground"
             >
-              <div className="tw-flex tw-aspect-square tw-size-8 tw-items-center tw-justify-center tw-rounded-lg tw-bg-sidebar-primary tw-text-sidebar-primary-foreground">
+              <div className="tw-bg-sidebar-primary tw-text-sidebar-primary-foreground tw-flex tw-aspect-square tw-size-8 tw-items-center tw-justify-center tw-rounded-lg">
                 <activeTeam.logo className="tw-size-4" />
               </div>
               <div className="tw-grid tw-flex-1 tw-text-left tw-text-sm tw-leading-tight">
-                <span className="tw-truncate tw-font-semibold">
-                  {activeTeam.name}
-                </span>
+                <span className="tw-truncate tw-font-medium">{activeTeam.name}</span>
                 <span className="tw-truncate tw-text-xs">{activeTeam.plan}</span>
               </div>
               <ChevronsUpDown className="tw-ml-auto" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="tw-w-[--radix-dropdown-menu-trigger-width] tw-min-w-56 tw-rounded-lg"
+            className="tw-w-(--radix-dropdown-menu-trigger-width) tw-min-w-56 tw-rounded-lg"
             align="start"
             side={isMobile ? "bottom" : "right"}
             sideOffset={4}
           >
-            <DropdownMenuLabel className="tw-text-xs tw-text-muted-foreground">
+            <DropdownMenuLabel className="tw-text-muted-foreground tw-text-xs">
               Teams
             </DropdownMenuLabel>
             {teams.map((team, index) => (
@@ -71,8 +69,8 @@ export function TeamSwitcher({
                 onClick={() => setActiveTeam(team)}
                 className="tw-gap-2 tw-p-2"
               >
-                <div className="tw-flex tw-size-6 tw-items-center tw-justify-center tw-rounded-sm tw-border">
-                  <team.logo className="tw-size-4 tw-shrink-0" />
+                <div className="tw-flex tw-size-6 tw-items-center tw-justify-center tw-rounded-md tw-border">
+                  <team.logo className="tw-size-3.5 tw-shrink-0" />
                 </div>
                 {team.name}
                 <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
@@ -80,10 +78,10 @@ export function TeamSwitcher({
             ))}
             <DropdownMenuSeparator />
             <DropdownMenuItem className="tw-gap-2 tw-p-2">
-              <div className="tw-flex tw-size-6 tw-items-center tw-justify-center tw-rounded-md tw-border tw-bg-background">
+              <div className="tw-flex tw-size-6 tw-items-center tw-justify-center tw-rounded-md tw-border tw-bg-transparent">
                 <Plus className="tw-size-4" />
               </div>
-              <div className="tw-font-medium tw-text-muted-foreground">Add team</div>
+              <div className="tw-text-muted-foreground tw-font-medium">Add team</div>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

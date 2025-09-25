@@ -45,6 +45,9 @@ export function SignUpForm({
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/protected`,
+          data: {
+            "store_name": "Cửa hàng 1"
+          }
         },
       });
       if (error) throw error;

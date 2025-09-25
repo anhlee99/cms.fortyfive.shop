@@ -1,17 +1,20 @@
 import { NextResponse, NextRequest } from "next/server";
 import { listShops, createShop } from "@/services/shops/shop.service";
 import { withAuth } from "@/lib/api/with-auth";
-import { ShopStatus } from "@/services/shops/shop.type";
+import { ShopSearchParams } from "@/services/shops/shop.type";
+import { getSearchParamsFromUrl } from "@/types/pagination";
 
 export const GET = withAuth(async (req: NextRequest) => {
     try {
-        const raw = Object.fromEntries(new URL(req.url).searchParams);
-
+        const searchParams = getSearchParamsFromUrl<ShopSearchParams>(req.url);
+    
         const shops = await listShops({
-            q: raw.q as string | undefined,
-            status: raw.status as ShopStatus | undefined,
-            limit: raw.limit ? Math.min(Math.max(parseInt(raw.limit as string, 10) || 20, 1), 100) : undefined,
-            page: raw.page ? Math.max(parseInt(raw.page as string, 10) || 1, 1) : undefined,
+            q: searchParams.q,
+            sort: searchParams.sort,
+            filters: searchParams.filters,
+            limit: searchParams.limit,
+            page: searchParams.page,
+            status: searchParams.status
         });
         return NextResponse.json({ ...shops }, { status: 200 });
     } catch (error) {
