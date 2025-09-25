@@ -8,7 +8,6 @@ export async function listShops(): Promise<Shop[]> {
     .from("shops")
     .select("*")
     .order("created_at", { ascending: false });
-  console.log({data, error});
   if (error) throw error;
   return data ;
 }

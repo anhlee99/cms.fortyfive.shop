@@ -3,8 +3,9 @@ module.exports = {
     {
       name: "cms.fortyfive.shop",
       script: "npx",
-      args: "next start -p " + (process.env.PORT || 3000),
+      args: "next start ",
       env: {
+        PORT: 60000,
         NODE_ENV: "production"
       }
     }
