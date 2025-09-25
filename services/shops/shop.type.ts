@@ -1,6 +1,6 @@
 import { SearchParams } from "@/types/pagination";
 
-export type ShopStatus = "active" | "inactive";
+export type ShopStatus = "active" | "inactive" | undefined;
 
 export interface Shop {
     id: string;
@@ -11,13 +11,14 @@ export interface Shop {
     created_at: string;
 }
 
-export interface ShopSearchParams extends SearchParams {
-    status?: ShopStatus;
-};
-
 export interface CreateShopDTO {
     user_id?: string;
     name: string;
     status: ShopStatus;
 }
+
+export interface ShopSearchParams extends SearchParams {
+    status?: ShopStatus;
+};
+
 

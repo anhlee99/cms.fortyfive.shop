@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { useShops } from "@/hooks/useShops";
+import { useShops } from "@/hooks/shops/useShops";
 
-export default function CreateShop() {
+export default function ShopCreate() {
     const { newShop } = useShops(); // uses SWR key /api/shops
     const [name, setName] = React.useState("");
     const [loading, setLoading] = React.useState(false);

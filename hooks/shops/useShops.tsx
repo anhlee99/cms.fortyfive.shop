@@ -1,11 +1,21 @@
 "use client";
 import useSWR from "swr";
-import { Shop, CreateShopDTO } from "@/services/shops/shop.type";
+import { Shop, CreateShopDTO, ShopSearchParams } from "@/services/shops/shop.type";
 import { fetchShops, createShop, fetchShopById } from "@/services/shops/shop.api";
+import { useShopSearchUrl, normalizeSearch } from "./useShopsSearch";
+import { PaginatedResponse } from "@/types/pagination";
 
-export function useShops(initialData?: Shop[]) {
+function keyFromParams(params?: ShopSearchParams) {
+  const p = normalizeSearch(params);
+  // stable key: SWR will re-fetch only when p changes (i.e., on Apply)
+  return ["/api/shops", p] as const;
+}
 
-    const { data, error, isLoading, mutate } = useSWR<Shop[]>("/api/shops", fetchShops, {
+export function useShops(initialData?: PaginatedResponse<Shop>) {
+    const { params } = useShopSearchUrl();
+    const swrKey = keyFromParams(params);
+
+    const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Shop>>(swrKey, () => fetchShops(params), {
         fallbackData: initialData,
         // Enable revalidation on focus, mount, and reconnect
         revalidateOnFocus: true,
@@ -23,9 +33,9 @@ export function useShops(initialData?: Shop[]) {
         const shop = await fetchShopById(id);
         return shop;
     }
-    
+
     return {
-        shops: data ?? [],
+        data,
         isLoading,
         isError: error,
         mutate,
@@ -33,3 +43,4 @@ export function useShops(initialData?: Shop[]) {
         getShop,
     };
 }
+

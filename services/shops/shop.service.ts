@@ -2,17 +2,17 @@ import type { Shop, CreateShopDTO, ShopSearchParams } from "./shop.type";
 import { createClient } from "@/lib/supabase/server";
 import { PaginatedResponse } from "@/types/pagination";
 
-export async function listShops(): Promise<Shop[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("shops")
-    .select("*")
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return data ;
-}
+// export async function listShops(searchParams?: ShopSearchParams): Promise<Shop[]> {
+//   const supabase = await createClient();
+//   const { data, error } = await supabase
+//     .from("shops")
+//     .select("*")
+//     .order("created_at", { ascending: false });
+//   if (error) throw error;
+//   return data ;
+// }
 
-export async function listShopsWithQuery(params: ShopSearchParams): Promise<PaginatedResponse<Shop>> {
+export async function listShops(params: ShopSearchParams): Promise<PaginatedResponse<Shop>> {
   const supabase = await createClient();
   
   const page = params.page && params.page > 0 ? params.page : 1;

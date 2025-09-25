@@ -12,7 +12,7 @@ export interface PaginatedResponse<T> {
 }
 
 export interface SortOption {
-  label?: string;
+  field?: string;
   dir?: 'asc' | 'desc';
 }
 
@@ -31,4 +31,20 @@ export interface SearchParams {
   [key: string]: any; // for additional filters
 }
 
+
+// concrete type with required defaults applied
+export type NormalizedSearchParams =
+  Omit<SearchParams, "page" | "limit" | "sort" | "filters"> & {
+    page: number;
+    limit: number;
+    sort: Required<SortOption>[];
+    filters: Required<FilterOption>[];
+  };
+
+export const DEFAULT_SEARCH: NormalizedSearchParams = {
+  page: 1,
+  limit: 20,
+  sort: [{field:"created_at",dir:"desc"}],
+  filters: [],
+};
 
