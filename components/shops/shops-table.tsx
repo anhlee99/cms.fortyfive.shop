@@ -1,15 +1,17 @@
 "use client";
 
 import type { Shop } from "@/services/shops/shop.type";
+import { useTranslation } from "react-i18next";
 
 export default function ShopsTable({ shops, isLoading }: { shops: Shop[]; isLoading: boolean }) {
+    const { t: tShop } = useTranslation("shop");
     return (
         <div className="overflow-x-auto">
             <table className="table table-zebra w-full">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Name</th>
+                        <th>{tShop("table.id")}</th>
+                        <th>{tShop("table.name")}</th>
                     </tr>
                 </thead>
                 {isLoading ? (

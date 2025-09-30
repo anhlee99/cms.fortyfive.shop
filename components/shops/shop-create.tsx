@@ -2,8 +2,10 @@
 
 import * as React from "react";
 import { useShops } from "@/hooks/shops/useShops";
+import { useTranslation } from "react-i18next";
 
 export default function ShopCreate() {
+    const { t } = useTranslation("common");
     const { newShop } = useShops(); // uses SWR key /api/shops
     const [name, setName] = React.useState("");
     const [loading, setLoading] = React.useState(false);
@@ -32,7 +34,7 @@ export default function ShopCreate() {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Shop Name"
+                placeholder={t("pages.shop/new.form.name")}
                 className="tw-border tw-p-2 tw-rounded"
                 required
             />
@@ -41,7 +43,7 @@ export default function ShopCreate() {
                 disabled={loading}
                 className="tw-bg-blue-500 tw-text-white tw-py-2 tw-rounded disabled:tw-bg-gray-400"
             >
-                {loading ? "Creating..." : "Create Shop"}
+                {loading ? t("pages.shop/new.form.creating") : t("pages.shop/new.form.btn_create")}
             </button>
 
             {error && <p className="tw-text-red-500">{error}</p>}

@@ -4,6 +4,7 @@ import { ThemeSwitcher } from "@/components/theme-switcher";
 import Image from 'next/image'
 
 export default function Home() {
+
   return (
     <main className="tw-min-h-screen tw-flex tw-flex-col tw-items-center">
       <div className="tw-flex-1 tw-w-full tw-flex tw-flex-col tw-gap-20 tw-items-center">
@@ -33,7 +34,7 @@ export default function Home() {
               className="font-bold hover:underline"
               rel="noreferrer"
             >
-              FortyFive
+              FortyFive <span className="tw-text-foreground/50">CMS</span>
             </a>
           </p>
         </footer>

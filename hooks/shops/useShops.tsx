@@ -2,7 +2,7 @@
 import useSWR from "swr";
 import { PaginatedResponse } from "@/types/pagination";
 import { Shop, CreateShopDTO, ShopSearchParams } from "@/services/shops/shop.type";
-import { fetchShops, createShop, fetchShopById } from "@/services/shops/shop.api";
+import {list, create, getById } from "@/services/shops/shop.api";
 import { useShopSearchUrl, normalizeSearch } from "./useShopsSearch";
 
 function keyFromParams(params?: ShopSearchParams) {
@@ -14,8 +14,7 @@ function keyFromParams(params?: ShopSearchParams) {
 export function useShops(initialData?: PaginatedResponse<Shop>) {
     const { params } = useShopSearchUrl();
     const swrKey = keyFromParams(params);
-
-    const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Shop>>(swrKey, () => fetchShops(params), {
+    const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Shop>>(swrKey, () => list(params), {
         fallbackData: initialData,
         // Enable revalidation on focus, mount, and reconnect
         revalidateOnFocus: true,
@@ -24,13 +23,13 @@ export function useShops(initialData?: PaginatedResponse<Shop>) {
     });
 
     const newShop = async (payload: CreateShopDTO) => {
-        const newShop = await createShop(payload);
+        const newShop = await create(payload);
         await mutate();
         return newShop;
     };
 
     const getShop = async (id: string): Promise<Shop> => {
-        const shop = await fetchShopById(id);
+        const shop = await getById(id);
         return shop;
     }
 

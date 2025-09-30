@@ -4,7 +4,6 @@ import { createClient as Supabase } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import type { User as AppUser } from '@/types/user'
 import {toAppUser } from '@/lib/auth'
-import { redirect } from 'next/navigation'
 
 export type AuthContext = {
   user: AppUser;
@@ -33,18 +32,28 @@ export async function getAuthFromRequest(req: NextRequest): Promise<AuthContext 
 
 }
 
-export function withAuth(
-  handler: (req: NextRequest, auth: AuthContext) => Promise<NextResponse>
+// A helper to model "maybe a promise"
+export type DynamicRouteCtx<P extends Record<string, string>> = {
+  params: Promise<P>;
+};
+
+export function withAuth<P extends Record<string, string>>(
+  handler: (req: NextRequest, ctx: { params: P }, auth: AuthContext) => Promise<NextResponse>
 ) {
-  return async (req: NextRequest) => {
+  return async (req: NextRequest, ctx: DynamicRouteCtx<P>): Promise<NextResponse>  => {
     const auth = await getAuthFromRequest(req);
-    // if (!auth) return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
+
     if (!auth) {
-      return redirect('/auth/login?next=' + encodeURIComponent(req.url));
+      const url = new URL("/auth/login", req.nextUrl);
+      url.searchParams.set("next", req.nextUrl.toString());
+      return NextResponse.redirect(url);
     }
 
     try {
-      return await handler(req, auth);
+    const resolved = { params: await ctx.params };
+
+      // const resolved: ResolvedCtx<P> = { params: await ctx.params };
+      return await handler(req, resolved, auth);
     } catch (e: any) {
       return NextResponse.json({ error: e.message ?? "Server error" }, { status: 500 });
     }

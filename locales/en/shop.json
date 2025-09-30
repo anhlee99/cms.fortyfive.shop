@@ -1,0 +1,23 @@
+{
+    "title": "Cửa hàng",
+    "description": "Quản lý cửa hàng của bạn ở đây.",
+    "name": "Tên cửa hàng",
+    "table_head": {
+        "id": "ID",
+        "name": "Tên cửa hàng"
+    },
+    "table": {
+        "id": "ID",
+        "name": "Tên cửa hàng"
+    },
+    "no_shops": "Chưa có cửa hàng nào. Tạo cửa hàng mới.",
+    "form": {
+        "name": "Tên cửa hàng",
+        "creating": "Đang tạo...",
+        "btn_create": "Tạo cửa hàng"
+    },
+    "error": {
+        "fetch": "Lỗi khi tải cửa hàng.",
+        "create": "Lỗi khi tạo cửa hàng."
+    }
+}

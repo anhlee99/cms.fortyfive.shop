@@ -2,7 +2,7 @@ import type { Shop, CreateShopDTO, ShopSearchParams } from "./shop.type";
 import { createClient } from "@/lib/supabase/server";
 import { PaginatedResponse } from "@/types/pagination";
 
-export async function listShops(params: ShopSearchParams): Promise<PaginatedResponse<Shop>> {
+export async function list(params: ShopSearchParams): Promise<PaginatedResponse<Shop>> {
   const supabase = await createClient();
   
   const page = params.page && params.page > 0 ? params.page : 1;
@@ -49,7 +49,7 @@ export async function listShops(params: ShopSearchParams): Promise<PaginatedResp
   }
 }
 
-export async function createShop(input: CreateShopDTO): Promise<Shop> {
+export async function create(input: CreateShopDTO): Promise<Shop> {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from("shops")
@@ -61,7 +61,7 @@ export async function createShop(input: CreateShopDTO): Promise<Shop> {
     return data as Shop;        
 }
 
-export async function getShopById(id: string): Promise<Shop | null> {
+export async function getById(id: string): Promise<Shop | null> {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from("shops")

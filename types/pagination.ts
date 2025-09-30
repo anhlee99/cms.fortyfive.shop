@@ -12,10 +12,33 @@ export interface PaginatedResponse<T> {
 }
 
 type SortDir = "asc" | "desc";
-type FilterOperator =
+
+export type FilterOperator =
   | "eq" | "neq" | "lt" | "lte" | "gt" | "gte"
   | "like" | "ilike" | "in" | "is" | "fts" | "plfts" | "phfts";
+export type FilterNotOperator =
+  | "eq" | "lt" | "lte" | "gt" | "gte" | "like" | "ilike";
 
+export const OP_MAP = {
+  eq:   (q:any,f:string,v:any) => q.eq(f, v),
+  neq:  (q:any,f:string,v:any) => q.neq(f, v),
+  lt:   (q:any,f:string,v:any) => q.lt(f, v),
+  lte:  (q:any,f:string,v:any) => q.lte(f, v),
+  gt:   (q:any,f:string,v:any) => q.gt(f, v),
+  gte:  (q:any,f:string,v:any) => q.gte(f, v),
+  like: (q:any,f:string,v:any) => q.ilike(f, `%${v}%`),
+  ilike:(q:any,f:string,v:any) => q.ilike(f, `%${v}%`),
+  in:   (q:any,f:string,v:any) => Array.isArray(v) ? q.in(f, v) : q,
+  // add more operators as needed
+  is:   (q:any,f:string,v:any) => q.is(f, v),               // null | true | false
+  // not:  (q:any,f:string,v:any,op?:string) => q.not(f, op ?? "eq", v),
+  // cs:   (q:any,f:string,v:any) => q.contains(f, v),         // array/json contains
+  // cd:   (q:any,f:string,v:any) => q.containedBy(f, v),
+  // ov:   (q:any,f:string,v:any) => q.overlaps(f, v),
+  fts:  (q:any,f:string,v:any) => q.textSearch(f, v, { type: "websearch" }),
+  plfts:(q:any,f:string,v:any) => q.textSearch(f, v, { type: "plain" }),
+  phfts:(q:any,f:string,v:any) => q.textSearch(f, v, { type: "phrase" }),
+} as const;
 
 export interface SortOption {
   field?: string;
@@ -26,6 +49,7 @@ export interface FilterOption {
     value: string;
     field: string;
     operator?: FilterOperator;
+    notOp?:  FilterNotOperator;
 }
 
 export interface SearchParams {
@@ -72,60 +96,58 @@ export function getSearchParamsFromUrl<T extends object = {}>(
   };
 
   // --- Robust sort parsing ---
-  // Supports: sort=[{"field":"created_at","dir":"desc"}].
-  const sortStr = sp.get("sort");
-  if (sortStr) {
-    try {
-      const sortArr = JSON.parse(sortStr);
-      if (Array.isArray(sortArr)) {
-        for (const s of sortArr) {
-          if (s && typeof s === "object" && typeof s.field === "string") {
-            const dir = s.dir === "asc" ? "asc" : "desc";
-            params.sort!.push({ field: s.field, dir });
-          }
-        }
-      }
-    } catch (e) {
-      // ignore malformed sort
+  // Supports: sort["<field>"]=<direction>.
+  sp.forEach((value, key) => {
+    const m = key.match(/^sort\[(.+?)\]$/);
+    if (m) {
+      const field = m[1];
+      const dir = (value === "asc" || value === "desc") ? value : "asc";
+      params.sort?.push({ field, dir });
     }
-  }
+  });
 
+  if (params.sort && params.sort.length === 0) {
+    params.sort = undefined; // will apply default later
+  }
+  
   // --- Robust filter parsing ---
   // Supports:
   //   filter[field]=value
   //   filter[field][value]=value
   //   filter[field][operator]=eq|neq|...
+  //   filter[field][notOp]=eq|lt|lte|gt|gte|like|ilike
   // We aggregate via a map so order doesn't matter.
-  const filterMap = new Map<
-    string,
-    { value?: string; operator?: FilterOperator }
-  >();
+  const filterMap = new Map<string, { value?: string; operator?: FilterOperator; notOp?: FilterNotOperator }>();
 
-  sp.forEach((value, key) => {
-    // filter[field]=value   OR   filter[field][value]=value
-    let m = key.match(/^filter\[(.+?)\](?:\[value\])?$/);
-    if (m) {
-      const field = m[1];
-      const f = filterMap.get(field) ?? {};
+  sp.forEach((value, rawKey) => {
+    // ^filter[FIELD]( [value|operator|notOp] )?$
+    const m = rawKey.match(/^filter\[([^\]]+)\](?:\[(value|operator|notOp)\])?$/);
+    if (!m) return;
+
+    const field = m[1];                 // ví dụ: "name" | "labels"
+    const part  = m[2] as "value" | "operator" | "notOp" | undefined;
+
+    const f = filterMap.get(field) ?? {};
+    if (!part || part === "value") {
       f.value = value;
-      filterMap.set(field, f);
-      return;
+    } else if (part === "operator") {
+      f.operator = value as FilterOperator;
+    } else if (part === "notOp") {
+      f.notOp = value as FilterNotOperator;
     }
-    // filter[field][operator]=op
-    m = key.match(/^filter\[(.+?)\]\[operator\]$/);
-    if (m) {
-      const field = m[1];
-      const f = filterMap.get(field) ?? {};
-      const op = value as FilterOperator;
-      f.operator = op;
-      filterMap.set(field, f);
-    }
+    filterMap.set(field, f);
   });
 
-  for (const [field, f] of filterMap) {
-    if (typeof f.value === "string" && f.value.length > 0) {
-      (params.filters ??= []).push({ field, value: f.value, operator: f.operator });
-    }
+  // Kết quả cuối:
+  const filters = Array.from(filterMap, ([field, f]) => ({
+    field,
+    value: f.value!,
+    operator: f.operator,
+    notOp: f.notOp,
+  })).filter(x => x.value !== undefined && x.value !== "");
+
+  if (filters.length > 0) {
+    params.filters = filters;
   }
 
   // --- Optional extras ---
@@ -133,4 +155,57 @@ export function getSearchParamsFromUrl<T extends object = {}>(
 
   // Intersection return
   return { ...params, ...extras } as SearchParams & T;
+}
+
+//Supports: 
+//   sort["<field>"]=<direction>.
+//   filter[field]=value
+//   filter[field][value]=value
+//   filter[field][operator]=eq|neq|...
+//   filter[field][notOp]=eq|lt|lte|gt|gte|like|ilike
+export function toQuery<T extends SearchParams>(params: T | undefined): string {
+  if (!params) return "";
+  
+  const qs = new URLSearchParams();
+
+  // Scalars (page, limit, q, etc.)
+  if (params.page) qs.set("page", String(params.page));
+  if (params.limit) qs.set("limit", String(params.limit));
+  if (params.q) qs.set("q", params.q);
+
+  // Sort array → sort[field]=dir
+  if (params.sort && Array.isArray(params.sort)) {
+    for (const s of params.sort) {
+      if (s?.field) {
+        qs.set(`sort[${s.field}]`, s.dir ?? "asc");
+      }
+    }
+  }
+
+  // Filters array → filter[field][value], filter[field][operator], filter[field][notOp]
+  if (params.filters && Array.isArray(params.filters)) {
+    for (const f of params.filters) {
+      if (!f?.field) continue;
+      if (f.value !== undefined && f.value !== null && f.value !== "") {
+        qs.set(`filter[${f.field}][value]`, String(f.value));
+      }
+      if (f.operator) qs.set(`filter[${f.field}][operator]`, f.operator);
+      if (f.notOp) qs.set(`filter[${f.field}][notOp]`, f.notOp);
+    }
+  }
+
+  // Any other extra props (not in SearchParams)
+  Object.entries(params).forEach(([k, v]) => {
+    if (["page", "limit", "q", "sort", "filters"].includes(k)) return;
+    if (v === undefined || v === null || v === "") return;
+
+    if (Array.isArray(v)) {
+      v.forEach(val => qs.append(k, String(val)));
+    } else {
+      qs.set(k, String(v));
+    }
+  });
+
+  const s = qs.toString();
+  return s ? `?${s}` : "";
 }

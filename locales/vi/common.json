@@ -1,0 +1,4 @@
+{ 
+    "welcome": "Xin chào!", 
+    "intro": "Trang này dùng i18next với locale lấy từ header."
+}

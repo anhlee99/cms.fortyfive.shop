@@ -32,8 +32,12 @@ export async function createClient(initToken?: string) {
   }
   if (accessToken) {
     return createSupabaseClient<Database>(SUPABASE_URL, SUPABASE_ANON, {
-        global: { headers: { Authorization: `Bearer ${accessToken}` } },
+        global: {
+           headers: { Authorization: `Bearer ${accessToken}` },
+          //  fetch: debugFetch("supabase"),
+        },
         auth: { persistSession: false, autoRefreshToken: false },
+
     });
   }
 
@@ -62,4 +66,32 @@ export async function createClient(initToken?: string) {
       },
     },
   );
+}
+
+
+export function debugFetch(tag = "supabase") {
+  return async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = typeof input === "string" ? input : (input as Request).url;
+    const method = init?.method ?? (typeof input !== "string" && (input as Request).method) ?? "GET";
+    const body =
+      init?.body && typeof init.body !== "string"
+        ? JSON.stringify(init.body)
+        : (init?.body as string | undefined);
+
+    console.log(`[${tag}] → ${method} ${url}`);
+    if (body) console.log(`[${tag}] body:`, body);
+
+    const res = await fetch(input as any, init as any);
+
+    const clone = res.clone();
+    let text = "";
+    try { text = await clone.text(); } catch {}
+    console.log(
+      `[${tag}] ← ${res.status}`,
+      res.headers.get("content-range") ? `content-range=${res.headers.get("content-range")}` : "",
+      text.slice(0, 800) // keep short
+    );
+
+    return res;
+  };
 }

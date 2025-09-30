@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { ShopSearchParams, ShopStatus } from "@/services/shops/shop.type";
-import { DEFAULT_SEARCH } from "@/types/pagination";
+import { DEFAULT_SEARCH, toQuery } from "@/types/pagination";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export const DEFAULT_SHOP_SEARCH: Required<Pick<ShopSearchParams, "page"|"limit">> & ShopSearchParams = {
@@ -22,17 +22,6 @@ function coerceInt(v: string | null, fb: number) {
 function parseJson<T>(v: string | null): T | undefined {
   if (!v) return undefined;
   try { return JSON.parse(v) as T; } catch { return undefined; }
-}
-
-function toQuery(params: ShopSearchParams) {
-  const qs = new URLSearchParams();
-  Object.entries(params).forEach(([k, v]) => {
-    if (v == null || v === "" || (Array.isArray(v) && v.length === 0)) return;
-    if (Array.isArray(v) || typeof v === "object") qs.set(k, JSON.stringify(v));
-    else qs.set(k, String(v));
-  });
-  const s = qs.toString();
-  return s ? `?${s}` : "";
 }
 
 export function normalizeSearch(p: ShopSearchParams = {}): ShopSearchParams {
