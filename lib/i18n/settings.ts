@@ -4,7 +4,7 @@ export const defaultLocale: Locale = "vi";
 
 export function pickNamespaces(pathname: string): string[] {
   if (pathname.startsWith("/shops")) return ["common", "shop"];
-  if (pathname.startsWith("/dashboard")) return ["common", "dashboard"];
-  if (pathname.startsWith("/auth")) return ["common", "auth"];
+  if (pathname.startsWith("/dashboard")) return ["common"];
+  if (pathname.startsWith("/auth")) return ["common"];
   return ["common"]; // mặc định
 }
