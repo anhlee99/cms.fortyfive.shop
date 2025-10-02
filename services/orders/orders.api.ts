@@ -4,7 +4,6 @@ import { PaginatedResponse, toQuery } from "@/types/pagination";
 const http = createHttp({});
 
 
-
 export async function list(params?: OrderSearchParams): Promise<PaginatedResponse<Order>> {
   try {
     return await http.get<PaginatedResponse<Order>>(`/api/orders${toQuery(params)}`, {cache: "no-store"});

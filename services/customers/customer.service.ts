@@ -1,4 +1,4 @@
-import type { Order, OrderCreateDTO, OrderSearchParams, OrderUpdateDTO, OrderStatus, OrderStatusCreateDTO} from "./orders.type";
+import type { Customer, CustomerCreateDTO, CustomerSearchParams, CustomerUpdateDTO} from "./customer.type";
 import { createClient } from "@/lib/supabase/server";
 import { PaginatedResponse, OP_MAP, FilterOption, FilterOperator, FilterNotOperator } from "@/types/pagination";
 
@@ -65,7 +65,7 @@ function applyFilter(q: any, f: FilterOption) {
   return q;
 }
 
-export async function list(params: OrderSearchParams): Promise<PaginatedResponse<Order>> {
+export async function list(params: CustomerSearchParams): Promise<PaginatedResponse<Customer>> {
   const supabase = await createClient();
   const B = bucketize(params.filters);
 
@@ -76,20 +76,20 @@ export async function list(params: OrderSearchParams): Promise<PaginatedResponse
   // SELECT string: LEFT by default
   let selectLeft = `
     *,
-    orders_labels ( label_id ),
-    labels:orders_labels ( labels ( * ) )
+    customers_labels ( label_id ),
+    labels:customers_labels ( labels ( * ) )
   `;
   let selectInner = `
     *,
-    orders_labels!inner ( label_id ),
-    labels:orders_labels ( labels ( * ) )
+    customers_labels!inner ( label_id ),
+    labels:customers_labels ( labels ( * ) )
   `;
 
   // Chọn LEFT hay INNER tuỳ có label filter
-  let q = supabase.from("orders").select(
+  let q = supabase.from("customers").select(
     B.labelFilters.length ? selectInner : selectLeft,
     { count: "exact" }
-  ).is("deleted_at", null); // chỉ lấy những đơn hàng chưa bị xoá
+  );
 
   // 3.1) labelFilters: ánh xạ sang bảng join
   for (const f of B.labelFilters) {
@@ -97,11 +97,11 @@ export async function list(params: OrderSearchParams): Promise<PaginatedResponse
     const v = normalizeValue(f.value, op);
 
     if (op === "in") {
-      q = q.in("orders_labels.label_id", Array.isArray(v) ? v : [String(v)]);
+      q = q.in("customers_labels.label_id", Array.isArray(v) ? v : [String(v)]);
     } else if (f.notOp) {
-      q = q.not("orders_labels.label_id", f.notOp as any, normalizeValue(f.value, f.notOp));
+      q = q.not("customers_labels.label_id", f.notOp as any, normalizeValue(f.value, f.notOp));
     } else {
-      q = q.eq("orders_labels.label_id", v);
+      q = q.eq("customers_labels.label_id", v);
     }
   }
 
@@ -132,12 +132,9 @@ export async function list(params: OrderSearchParams): Promise<PaginatedResponse
     // basic text search
   if (params.q && params.q.trim()) {
     const search = params.q.trim();
-    q = q.ilike("order_code", `%${search}%`);
+    q = q.ilike("name", `%${search}%`).or(`phone.ilike.%${search}%`);
   }
 
-  if (params.order_status_id) {
-    q = q.eq("order_status_id", params.order_status_id);
-  }
 
 
   // sorting
@@ -156,7 +153,7 @@ export async function list(params: OrderSearchParams): Promise<PaginatedResponse
     data: data.map((item: any) => ({
       ...item,
       labels: item.labels ?? []
-    })) as Order[],
+    })) as Customer[],
     pagination: {
       page,
       pageSize: limit,
@@ -166,128 +163,71 @@ export async function list(params: OrderSearchParams): Promise<PaginatedResponse
   }
 }
 
-export async function create(input: OrderCreateDTO & {user_id: string}): Promise<Order> {
+export async function create(input: CustomerCreateDTO): Promise<Customer> {
     const supabase = await createClient();
-    const { data, error } = await supabase.rpc("create_order", { p_order: input});
+    const { data, error } = await supabase
+        .from("customers")
+        .insert({ ...input})
+        .select("*")
+        .single();
+
     if (error) throw error;
-    return data as Order;
+    return data as Customer;
 }
 
-export async function update(input: Partial<OrderUpdateDTO>): Promise<Order> {
+export async function update(id: string, input: Partial<CustomerUpdateDTO>): Promise<Customer> {
     const supabase = await createClient();
-    // sử dụng RPC để gọi hàm cập nhật
-    const { data, error } = await supabase.rpc("update_order", { p_order: input });
+    const { data, error } = await supabase
+        .from("customers")
+        .update({ ...input })
+        .eq("id", id)
+        .select("*")
+        .single();
+        
     if (error) throw error;
-    return data as Order;
+    return data as Customer;
 }
 
 export async function del(id: string): Promise<void> {
     const supabase = await createClient();
-
-    // Thực hiện xoá mềm (soft delete) bằng cách cập nhật trường deleted_at
-    // khi đơn hàng được tạo không quá 45 ngày
-    const nowIso = new Date().toISOString();
-    const cutoffIso = new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString();
-
-    const { data, error } = await supabase
-        .from("orders")
-        .update({ deleted_at: nowIso })
-        .eq("id", id)
-        .is("deleted_at", null)    // chưa bị xóa
-        .gte("created_at", cutoffIso)
-        .select("id, deleted_at");  // cần select để nhận về error nếu không có hàng nào bị ảnh hưởng
-    
+    const { error } = await supabase
+        .from("customers")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
+        
     if (error) throw error;
-    if (!data || data.length === 0) {
-        throw new Error("Order not found or cannot be deleted (older than 45 days)");
-    }
-    return;
 }
 
-export async function getById(id: string): Promise<Order | null> {
+export async function getById(id: string): Promise<Customer | null> {
     const supabase = await createClient();
     const { data, error } = await supabase
-        .from("orders")
-        .select(`
-          *, 
-          orders_products(*), 
-          customers:customer_id(*), 
-          orders_labels(label_id, labels(*)),
-          orders_status:order_status_id(*)
-        `)
+        .from("customers")
+        .select("*")
         .eq("id", id)
-        .is("deleted_at", null)
         .single();
         
     if (error) throw error;
-    return data as Order;
+    return data as Customer;
 }
 
-export async function addLabel(orderId: string, labelId: string): Promise<void> {
+export async function addLabel(customerId: string, labelId: string): Promise<void> {
     const supabase = await createClient();
     const { error } = await supabase
-        .from("orders_labels")
+        .from("customers_labels")
         .upsert(
-          { order_id: orderId, label_id: labelId },
-          { onConflict: 'order_id,label_id', ignoreDuplicates: true }
+          { customer_id: customerId, label_id: labelId },
+          { onConflict: 'customer_id,label_id', ignoreDuplicates: true }
         );
     if (error) throw error;
 }
 
-export async function removeLabel(orderId: string, labelId: string): Promise<void> {
+export async function removeLabel(customerId: string, labelId: string): Promise<void> {
     const supabase = await createClient();
     const { error } = await supabase
-        .from("orders_labels")
+        .from("customers_labels")
         .delete()
-        .eq("order_id", orderId)
+        .eq("customer_id", customerId)
         .eq("label_id", labelId);
         
     if (error) throw error;
-}
-
-// orders-status
-export async function listOrderStatuses(): Promise<OrderStatus[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-      .from("orders_status")
-      .select("*")
-      .is("deleted_at", null)
-      .order("index", { ascending: true });
-      
-  if (error) throw error;
-  return data as OrderStatus[];
-}
-
-export async function createOrUpdateOrderStatus(input: OrderStatusCreateDTO): Promise<OrderStatus> {
-  const supabase = await createClient();
-  let res;
-  if (input.id) {
-    // cập nhật
-    res = await supabase
-      .from("orders_status")
-      .update(input)
-      .eq("id", input.id)
-      .select()
-      .single();
-  } else {
-    // tạo mới
-    res = await supabase
-      .from("orders_status")
-      .insert(input)
-      .select()
-      .single();
-  }
-  
-  if (res.error) throw res.error;
-  return res.data as OrderStatus;
-}
-
-export async function deleteOrderStatus(id: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase
-      .from("orders_status")
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("id", id);
-      
-  if (error) throw error;
 }

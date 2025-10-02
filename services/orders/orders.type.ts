@@ -1,5 +1,21 @@
 import { SearchParams } from "@/types/pagination";
-export type OrderStatus = "draft" | "wait_for_confirmation" | "in_processing" | "in_delivery" | "completed" | "canceled" | "canceled_by_customer";
+import { t } from "i18next";
+
+export type OrderStatus = {
+    id: string;
+    name: string;
+    index: number;
+    is_completed: boolean;
+    extra_info: Record<string, any>;
+}
+
+export type OrderStatusCreateDTO = {
+    id?: string;
+    name: string;
+    index: number;
+    is_completed: boolean;
+    extra_info?: Record<string, any>;
+}
 
 export type Order = {
     id: string;
@@ -11,6 +27,7 @@ export type Order = {
     order_code: string;
     delivery_info: Record<string, any>[];
     status: OrderStatus;
+    order_status_id: string;
     draft_amount: number;
     discount_pre_tax: number;   
     vat_oder_amount: number;
@@ -50,9 +67,10 @@ export type OrderCreateDTO = {
     order_code: string;
     delivery_info: Record<string, any>[];
     status?: OrderStatus;
+    order_status_id: string;
     draft_amount: number;
     discount_pre_tax: number;   
-    vat_oder_amount: number;
+    vat_order_amount: number;
     delivery_fee: number; 
     vat_delivery: number; 
     vat_delivery_amount: number; 
@@ -67,5 +85,5 @@ export type OrderUpdateDTO = Partial<OrderCreateDTO> & {
 }
 
 export interface OrderSearchParams extends SearchParams {
-    status?: OrderStatus;
+    order_status_id?: string;
 }

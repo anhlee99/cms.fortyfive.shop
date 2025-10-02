@@ -47,3 +47,21 @@ export async function getById(id: string): Promise<Product> {
       throw new Error("Failed to fetch product");
   }
 }
+
+export async function addLabel(productId: string, labelId: string): Promise<Product> {
+    try {
+        const res = await http.post<{ data: Product }>(`/api/products/${productId}/labels`, { label_id: labelId });
+        return res.data;
+    } catch (error) {
+        throw new Error("Failed to add labels to product");
+    }
+}
+
+export async function removeLabel(productId: string, labelId: string): Promise<Product> {
+    try {
+        const res = await http.del<{ data: Product }>(`/api/products/${productId}/labels?label_id=${labelId}`);
+        return res.data;
+    } catch (error) {
+        throw new Error("Failed to remove label from product");
+    }
+}

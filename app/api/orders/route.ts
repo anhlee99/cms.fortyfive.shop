@@ -1,14 +1,14 @@
 import { NextResponse, NextRequest } from "next/server";
 import { list, create } from "@/services/orders/orders.service";
 import { withAuth } from "@/lib/api/with-auth";
-import { OrderSearchParams, OrderStatus } from "@/services/orders/orders.type";
+import { OrderSearchParams } from "@/services/orders/orders.type";
 import { getSearchParamsFromUrl } from "@/types/pagination";
 
 export const GET = withAuth(async (req: NextRequest) => {
     try {
         const searchParams = getSearchParamsFromUrl<OrderSearchParams>(req.url, (sp) => {
             return {
-                status: sp.get("status") as OrderStatus,
+                order_status_id: sp.get("order_status_id") || undefined,
             };
         });
        
