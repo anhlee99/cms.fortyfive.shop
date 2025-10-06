@@ -1,6 +1,7 @@
 "use client";
 
 import type { Product } from "@/services/products/product.type";
+import { useTranslation } from "react-i18next";
 import { DataTable } from "@/components/widgets/data_table";
 import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -144,7 +145,7 @@ export default function ProductsTable({
   }, [data]);
 
   // tạo skeleton khi loading
-  if (!data || isLoading) return <div className="skeleton-card"></div>;
+  if (!data) return <div className="skeleton-card"></div>;
 
   return (
     <div>

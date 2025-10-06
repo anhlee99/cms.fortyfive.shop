@@ -10,9 +10,20 @@ import {
 } from "@/components/ui/side_panel";
 import { useProducts } from "@/hooks/products/useProduct";
 import ProductsTable from "@/components/products/products-table";
+import { Product } from "@/services/products/product.type";
+import { PaginatedResponse } from "@/types/pagination";
 
 export default function Page() {
-  const { data, isLoading, newProduct } = useProducts();
+  const { data, isLoading, newProduct } = useProducts({
+    data: [],
+    pagination: {
+      page: 1,
+      pageSize: 10,
+      totalItems: 0,
+      totalPages: 0,
+    },
+  });
+
   return (
     <div className="@container/main p-10">
       <SidePanel>
