@@ -4,7 +4,6 @@ import { ShopStatus } from "@/services/shops/shop.type";
 import { useShopSearchUrl } from "@/hooks/shops/useShopsSearch";
 import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
 
-
 export default function ShopFilter() {
   const { params, setParams, resetParams } = useShopSearchUrl();
 
@@ -15,25 +14,29 @@ export default function ShopFilter() {
   }, 350);
 
   return (
-    <div className="tw-flex tw-flex-wrap tw-items-end tw-gap-3">
-      <div className="tw-flex tw-flex-col">
-        <label className="tw-text-sm">Search</label>
+    <div className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-col">
+        <label className="text-sm">Search</label>
         <input
-          className="tw-rounded-xl tw-border tw-px-3 tw-py-2"
+          className="rounded-xl border px-3 py-2"
           placeholder="Shop name…"
           value={q}
-          onChange={(e) => { const v = e.target.value; setQ(v); applyQ(v); }}
+          onChange={(e) => {
+            const v = e.target.value;
+            setQ(v);
+            applyQ(v);
+          }}
         />
       </div>
 
-      <div className="tw-flex tw-flex-col">
-        <label className="tw-text-sm">Status</label>
+      <div className="flex flex-col">
+        <label className="text-sm">Status</label>
         <select
-          className="tw-rounded-xl tw-border tw-px-3 tw-py-2"
+          className="rounded-xl border px-3 py-2"
           value={params.status ?? ""}
           onChange={(e) =>
             setParams({
-              status: e.target.value as ShopStatus || undefined,
+              status: (e.target.value as ShopStatus) || undefined,
               page: 1,
             })
           }
@@ -44,29 +47,30 @@ export default function ShopFilter() {
         </select>
       </div>
 
-      <div className="tw-flex tw-flex-col">
-        <label className="tw-text-sm">Limit</label>
+      <div className="flex flex-col">
+        <label className="text-sm">Limit</label>
         <input
           type="number"
           className="rounded-xl border px-3 py-2 w-28"
           value={params.limit ?? 20}
           min={1}
           max={100}
-          onChange={(e) => setParams({ limit: Number(e.target.value) || 20, page: 1 })}
-
+          onChange={(e) =>
+            setParams({ limit: Number(e.target.value) || 20, page: 1 })
+          }
         />
       </div>
-        <button
+      <button
         className="rounded-2xl border px-4 py-2"
         onClick={() => resetParams()}
       >
         Reset
       </button>
 
-      {/* <button onClick={apply} className="tw-rounded-2xl tw-border tw-px-4 tw-py-2 tw-shadow-sm">
+      {/* <button onClick={apply} className="rounded-2xl border px-4 py-2 shadow-sm">
         Apply
       </button>
-      <button onClick={reset} className="tw-rounded-2xl tw-border tw-px-4 tw-py-2">
+      <button onClick={reset} className="rounded-2xl border px-4 py-2">
         Reset
       </button> */}
     </div>

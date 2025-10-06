@@ -48,18 +48,18 @@ export function LoginForm({
   };
 
   return (
-    <div className={cn("tw-flex tw-flex-col tw-gap-6", className)} {...props}>
+    <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="tw-text-2xl">Login</CardTitle>
+          <CardTitle className="text-2xl text-red">Login</CardTitle>
           <CardDescription>
             Enter your email below to login to your account
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin}>
-            <div className="tw-flex tw-flex-col tw-gap-6">
-              <div className="tw-grid tw-gap-2">
+            <div className="flex flex-col gap-6">
+              <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -70,12 +70,12 @@ export function LoginForm({
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
-              <div className="tw-grid tw-gap-2">
-                <div className="tw-flex tw-items-center">
+              <div className="grid gap-2">
+                <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
                   <Link
                     href="/auth/forgot-password"
-                    className="tw-ml-auto tw-inline-block tw-text-sm tw-underline-offset-4 hover:underline"
+                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                   >
                     Forgot your password?
                   </Link>
@@ -88,16 +88,16 @@ export function LoginForm({
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="tw-text-sm tw-text-red-500">{error}</p>}
-              <Button type="submit" className="tw-w-full" disabled={isLoading}>
+              {error && <p className="text-sm text-red-500">{error}</p>}
+              <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Logging in..." : "Login"}
               </Button>
             </div>
-            <div className="tw-mt-4 tw-text-center tw-text-sm">
+            <div className="mt-4 text-center text-sm">
               Don&apos;t have an account?{" "}
               <Link
                 href="/auth/sign-up"
-                className="tw-underline tw-underline-offset-4"
+                className="underline underline-offset-4"
               >
                 Sign up
               </Link>

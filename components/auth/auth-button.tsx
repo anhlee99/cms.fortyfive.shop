@@ -4,12 +4,11 @@ import { LogoutButton } from "./logout-button";
 import { requireSession } from "@/lib/auth";
 
 export async function AuthButton() {
-
   // You can also use getUser() which will be slower.
-  const { claims } = await requireSession()
+  const { claims } = await requireSession();
 
   return claims ? (
-    <div className="tw-flex tw-items-center tw-gap-4">
+    <div className="flex items-center gap-4">
       Hey, {claims.email}!
       <Button asChild variant={"outline"}>
         <Link href="/dashboards">Dashboard</Link>
@@ -17,7 +16,7 @@ export async function AuthButton() {
       <LogoutButton />
     </div>
   ) : (
-    <div className="tw-flex tw-gap-2">
+    <div className="flex gap-2">
       <Button asChild size="sm" variant={"outline"}>
         <Link href="/auth/login">Sign in</Link>
       </Button>

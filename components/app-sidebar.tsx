@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   AudioWaveform,
   BookOpen,
@@ -13,22 +13,21 @@ import {
   SquareTerminal,
   Apple,
   Layers,
-} from "lucide-react"
+} from "lucide-react";
 
-import { NavMain } from "@/components/nav-main"
-import { NavUser } from "@/components/nav-user"
+import { NavMain } from "@/components/nav-main";
+import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-} from "@/components/ui/sidebar"
-import { User } from "@/types/user"
+} from "@/components/ui/sidebar";
+import { User } from "@/types/user";
 import { usePathname } from "next/navigation";
 import { NavItem } from "@/components/nav-main";
 // This is sample data.
-
 
 const data = {
   teams: [
@@ -96,7 +95,7 @@ const data = {
       items: [
         {
           title: "Danh sách",
-          url: "#",
+          url: "/products",
         },
         {
           title: "Tạo mới",
@@ -175,50 +174,49 @@ const data = {
     //   icon: Map,
     // },
   ],
-}
+};
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   user: User; // make required if you want
 };
 
-
 // add user prop to AppSidebar props and pass it to TeamSwitcher
 export function AppSidebar({ user, ...props }: AppSidebarProps) {
-    const pathname = usePathname();
-    const navItems: NavItem[] = React.useMemo(
-        () =>
-          data.navMain.map((item) => {
-            const active =
-              normalize(pathname) === normalize(item.url) ||
-              item.items?.some((s) => pathStartsWith(normalize(pathname), normalize(s.url)));
-            
-              if (active) {
-                // If the item is active, set all its sub-items to inactive
-                item.items = item.items?.map((subItem) => ({
-                  ...subItem,
-                  isActive: false,
-                }));
-              }
-            return { ...item, isActive: active };
-          }),
-        [pathname]
-      );
+  const pathname = usePathname();
+  const navItems: NavItem[] = React.useMemo(
+    () =>
+      data.navMain.map((item) => {
+        const active =
+          normalize(pathname) === normalize(item.url) ||
+          item.items?.some((s) =>
+            pathStartsWith(normalize(pathname), normalize(s.url))
+          );
 
-    return (
-        <Sidebar collapsible="icon" {...props}>
-        <SidebarHeader>
-        {/* <TeamSwitcher teams={data.teams} /> */}
-        </SidebarHeader>
-        <SidebarContent>
-          <NavMain items={navItems} />
-          {/* <NavProjects projects={data.projects} /> */}
-        </SidebarContent>
-        <SidebarFooter>
-          <NavUser user={user} />
-        </SidebarFooter>
-        <SidebarRail />
-        </Sidebar>
-    )
+        if (active) {
+          // If the item is active, set all its sub-items to inactive
+          item.items = item.items?.map((subItem) => ({
+            ...subItem,
+            isActive: false,
+          }));
+        }
+        return { ...item, isActive: active };
+      }),
+    [pathname]
+  );
+
+  return (
+    <Sidebar collapsible="icon" {...props}>
+      <SidebarHeader>{/* <TeamSwitcher teams={data.teams} /> */}</SidebarHeader>
+      <SidebarContent>
+        <NavMain items={navItems} />
+        {/* <NavProjects projects={data.projects} /> */}
+      </SidebarContent>
+      <SidebarFooter>
+        <NavUser user={user} />
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
+  );
 }
 
 function normalize(p: string) {

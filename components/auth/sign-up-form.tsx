@@ -46,8 +46,8 @@ export function SignUpForm({
         options: {
           emailRedirectTo: `${window.location.origin}/protected`,
           data: {
-            "store_name": "Cửa hàng 1"
-          }
+            store_name: "Cửa hàng 1",
+          },
         },
       });
       if (error) throw error;
@@ -60,16 +60,16 @@ export function SignUpForm({
   };
 
   return (
-    <div className={cn("tw-flex tw-flex-col tw-gap-6", className)} {...props}>
+    <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="tw-text-2xl">Sign up</CardTitle>
+          <CardTitle className="text-2xl">Sign up</CardTitle>
           <CardDescription>Create a new account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>
-            <div className="tw-flex tw-flex-col tw-gap-6">
-              <div className="tw-grid tw-gap-2">
+            <div className="flex flex-col gap-6">
+              <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -80,8 +80,8 @@ export function SignUpForm({
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
-              <div className="tw-grid tw-gap-2">
-                <div className="tw-flex tw-items-center">
+              <div className="grid gap-2">
+                <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
                 </div>
                 <Input
@@ -92,8 +92,8 @@ export function SignUpForm({
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              <div className="tw-grid tw-gap-2">
-                <div className="tw-flex tw-items-center">
+              <div className="grid gap-2">
+                <div className="flex items-center">
                   <Label htmlFor="repeat-password">Repeat Password</Label>
                 </div>
                 <Input
@@ -104,12 +104,12 @@ export function SignUpForm({
                   onChange={(e) => setRepeatPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="tw-text-sm tw-text-red-500">{error}</p>}
-              <Button type="submit" className="tw-w-full" disabled={isLoading}>
+              {error && <p className="text-sm text-red-500">{error}</p>}
+              <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Creating an account..." : "Sign up"}
               </Button>
             </div>
-            <div className="tw-mt-4 tw-text-center tw-text-sm">
+            <div className="mt-4 text-center text-sm">
               Already have an account?{" "}
               <Link href="/auth/login" className="underline underline-offset-4">
                 Login
