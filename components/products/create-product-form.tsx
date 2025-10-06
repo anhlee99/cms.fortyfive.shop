@@ -9,27 +9,17 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { IconLoader } from "@tabler/icons-react";
 import { ImageUpload } from "../widgets/ImageUpload";
 import { toast } from "sonner";
-
-interface ProductCreateDTO {
-  product_code: string;
-  name: string;
-  short_description: string;
-  description: string;
-  thumbnail: string;
-  gallery?: Record<string, any>[];
-  import_price: number;
-  vat: number; // percentage
-  sell_price: number;
-  display_price: number;
-}
+import { ProductCreateDTO } from "@/services/products/product.type";
 
 interface CreateProductFormProps {
+  onCreate: (product: ProductCreateDTO) => void;
   onClose: () => void;
   onSuccess?: (message: string) => void;
   onError?: (message: string) => void;
 }
 
 export default function CreateProductForm({
+  onCreate,
   onClose,
   onSuccess,
   onError,
@@ -65,8 +55,8 @@ export default function CreateProductForm({
         };
       if (!data.description.trim())
         errors.description = { message: "Mô tả chi tiết không được để trống." };
-      if (!data.thumbnail)
-        errors.thumbnail = { message: "Ảnh thumbnail không được để trống." };
+      // if (!data.thumbnail)
+      //   errors.thumbnail = { message: "Ảnh thumbnail không được để trống." };
       if (isNaN(data.import_price) || data.import_price < 0)
         errors.import_price = { message: "Giá nhập phải là số không âm." };
       if (isNaN(data.vat) || data.vat < 0 || data.vat > 100)
@@ -75,7 +65,6 @@ export default function CreateProductForm({
         errors.sell_price = { message: "Giá bán phải là số không âm." };
       if (isNaN(data.display_price) || data.display_price < 0)
         errors.display_price = { message: "Giá hiển thị phải là số không âm." };
-
       return {
         values: Object.keys(errors).length ? {} : data,
         errors,
@@ -132,6 +121,7 @@ export default function CreateProductForm({
       // Simulate API call to create product
       // Replace with actual API call
       console.log("Form data:", data);
+      onCreate(data);
       if (onSuccess) {
         onSuccess("Tạo sản phẩm thành công!");
         onClose();

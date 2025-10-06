@@ -201,7 +201,6 @@ export function DataTable<TData, TValue>({
             value={pageSize.toString()}
             onValueChange={(v: string) => {
               setPageSize(Number(v));
-              setPage(1);
             }}
           >
             <SelectTrigger className="w-[100px]">
