@@ -1,7 +1,6 @@
 "use client";
 
 import type { Product } from "@/services/products/product.type";
-import { useTranslation } from "react-i18next";
 import { DataTable } from "@/components/widgets/data_table";
 import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";

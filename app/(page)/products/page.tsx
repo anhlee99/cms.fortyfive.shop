@@ -10,8 +10,6 @@ import {
 } from "@/components/ui/side_panel";
 import { useProducts } from "@/hooks/products/useProduct";
 import ProductsTable from "@/components/products/products-table";
-import { Product } from "@/services/products/product.type";
-import { PaginatedResponse } from "@/types/pagination";
 
 export default function Page() {
   const { data, isLoading, newProduct } = useProducts({
