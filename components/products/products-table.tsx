@@ -1,16 +1,15 @@
+// @/components/products/products-table.tsx
 "use client";
 
 import type { Product } from "@/services/products/product.type";
-import { useTranslation } from "react-i18next";
 import { DataTable } from "@/components/widgets/data_table";
 import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SidePanelTrigger } from "@/components/ui/side_panel";
 import { PaginatedResponse } from "@/types/pagination";
 import { useProductSearchUrl } from "@/hooks/products/useProductsSearch";
-import { useState } from "react";
-import React from "react";
+import { useState, useEffect } from "react";
+import { LabelSelect } from "../labels/label-select";
 
 const columns = [
   {
@@ -26,54 +25,68 @@ const columns = [
       <input
         type="checkbox"
         checked={row.getIsSelected()}
-        onChange={row.getToggleSelectedHandler()}
+        onChange={(e) => {
+          e.stopPropagation(); // prevent row click
+          row.getToggleSelectedHandler()(e);
+        }}
+        onClick={(e) => e.stopPropagation()} // optional but safe
       />
     ),
   },
   {
     accessorKey: "product_code",
     header: "Mã Sản Phẩm",
-    cell: ({ row }: any) => <div>{row.getValue("product_code")}</div>,
+    cell: ({ row }: any) => (
+      <div className="cursor-pointer hover:underline">
+        {row.getValue("product_code")}
+      </div>
+    ),
   },
   {
     accessorKey: "name",
     header: "Tên",
-    cell: ({ row }: any) => <div>{row.getValue("name")}</div>,
+    cell: ({ row }: any) => (
+      <div className="cursor-pointer hover:underline">
+        {row.getValue("name")}
+      </div>
+    ),
   },
   {
     accessorKey: "short_description",
     header: "Mô Tả",
     cell: ({ row }: any) => (
-      <div className="max-w-xs truncate">
+      <div className="max-w-xs truncate cursor-pointer hover:underline">
         {row.getValue("short_description")}
       </div>
     ),
   },
   {
     accessorKey: "import_price",
-    header: () => {
-      return (
-        <Button variant="ghost" className="px-0" onClick={() => {}}>
-          Giá nhập
-          <ArrowUpDown />
-        </Button>
-      );
-    },
+    header: () => (
+      <Button variant="ghost" className="px-0" onClick={() => {}}>
+        Giá nhập
+        <ArrowUpDown />
+      </Button>
+    ),
     cell: ({ row }: any) => (
-      <div>${row.getValue("import_price").toFixed(2)}</div>
+      <div className="cursor-pointer hover:underline">
+        ${row.getValue("import_price").toFixed(2)}
+      </div>
     ),
   },
   {
     accessorKey: "sell_price",
-    header: () => {
-      return (
-        <Button variant="ghost" className="px-0" onClick={() => {}}>
-          Giá bán
-          <ArrowUpDown />
-        </Button>
-      );
-    },
-    cell: ({ row }: any) => <div>${row.getValue("sell_price").toFixed(2)}</div>,
+    header: () => (
+      <Button variant="ghost" className="px-0" onClick={() => {}}>
+        Giá bán
+        <ArrowUpDown />
+      </Button>
+    ),
+    cell: ({ row }: any) => (
+      <div className="cursor-pointer hover:underline">
+        ${row.getValue("sell_price").toFixed(2)}
+      </div>
+    ),
   },
   {
     id: "profit_percent",
@@ -93,58 +106,36 @@ const columns = [
           ? "text-red-600"
           : "text-gray-500";
 
-      return <div className={color}>{profitPercent.toFixed(2)}%</div>;
+      return (
+        <div className={`cursor-pointer hover:underline ${color}`}>
+          {profitPercent.toFixed(2)}%
+        </div>
+      );
     },
   },
-
-  // {
-  //   id: "actions",
-  //   enableHiding: false,
-  //   cell: ({ row }) => {
-  //     const payment = row.original;
-  //     return (
-  //       <DropdownMenu>
-  //         <DropdownMenuTrigger asChild>
-  //           <Button variant="ghost" className="h-8 w-8 p-0">
-  //             <span className="sr-only">Mở menu</span>
-  //             <MoreHorizontal />
-  //           </Button>
-  //         </DropdownMenuTrigger>
-  //         <DropdownMenuContent align="end">
-  //           <DropdownMenuLabel>Hành Động</DropdownMenuLabel>
-  //           <DropdownMenuItem
-  //             onClick={() => navigator.clipboard.writeText(payment.id)}
-  //           >
-  //             Sao chép mã ID thanh toán
-  //           </DropdownMenuItem>
-  //           <DropdownMenuSeparator />
-  //           <DropdownMenuItem>Xem khách hàng</DropdownMenuItem>
-  //           <DropdownMenuItem>Xem chi tiết thanh toán</DropdownMenuItem>
-  //         </DropdownMenuContent>
-  //       </DropdownMenu>
-  //     );
-  //   },
-  // },
 ];
 
 export default function ProductsTable({
   data,
   isLoading,
+  onRowClick,
+  onCreateClick,
 }: {
   data: PaginatedResponse<Product> | undefined;
   isLoading: boolean;
+  onRowClick: (product: Product) => void;
+  onCreateClick: () => void;
 }) {
   const [page, setPage] = useState(data?.pagination.page || 1);
   const [pageSize, setPageSize] = useState(data?.pagination.pageSize || 10);
+  const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
   const { setParams } = useProductSearchUrl();
 
-  // Sau đó xử lý logic điều kiện bằng effect hoặc if dùng giá trị state
-  React.useEffect(() => {
+  useEffect(() => {
     if (!data) return;
     setPage(data.pagination.page ?? 1);
   }, [data]);
 
-  // tạo skeleton khi loading
   if (!data) return <div className="skeleton-card"></div>;
 
   return (
@@ -152,7 +143,15 @@ export default function ProductsTable({
       <DataTable
         data={data.data}
         columns={columns}
-        initialColumns={["select", "status", "email", "actions"]}
+        initialColumns={[
+          "select",
+          "product_code",
+          "name",
+          "short_description",
+          "import_price",
+          "sell_price",
+          "profit_percent",
+        ]}
         page={page}
         setPage={(e) => {
           setPage(e);
@@ -166,12 +165,25 @@ export default function ProductsTable({
         totalPages={data.pagination.totalPages}
         totalVendor={data.pagination.totalItems}
         loading={isLoading}
+        onRowClick={onRowClick}
         customToolbar={() => (
           <div className="flex items-center gap-2 w-full">
             <Input placeholder="Tìm kiếm..." className="max-w-sm flex-1" />
-            <SidePanelTrigger asChild>
-              <Button className="ml-auto">Tạo sản phẩm</Button>
-            </SidePanelTrigger>
+            <LabelSelect
+              value={selectedLabels}
+              onValueChange={(newLabels) => {
+                setSelectedLabels(newLabels);
+                setPage(1);
+                setParams({ page: 1, labels: newLabels });
+              }}
+              placeholder="Tìm kiếm theo thẻ"
+              className="flex gap-2 w-50"
+              labelPosition="bottom"
+            />
+
+            <Button className="ml-auto" onClick={onCreateClick}>
+              Tạo sản phẩm
+            </Button>
           </div>
         )}
       />

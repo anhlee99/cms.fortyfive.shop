@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { defaultLocale, Locale } from "../lib/i18n/settings";
 import I18nProvider from "@/lib/i18n/I18nProvider";
 import { pickNamespaces } from "@/lib/i18n/settings";
+import { Toaster } from "sonner";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
   description: "Nền tảng quản lý bán hàng đa kênh",
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },   // if using public/favicon.ico
+      { url: "/favicon.ico", sizes: "any" }, // if using public/favicon.ico
     ],
     shortcut: "/favicon.ico",
   },
@@ -31,7 +32,10 @@ const geistSans = Geist({
 
 async function loadLocaleResources(locale: string, namespaces: string[]) {
   const entries = await Promise.all(
-    namespaces.map(async (ns) => [ns, (await import(`../locales/${locale}/${ns}.json`)).default] as const)
+    namespaces.map(
+      async (ns) =>
+        [ns, (await import(`../locales/${locale}/${ns}.json`)).default] as const
+    )
   );
   return { [locale]: Object.fromEntries(entries) };
 }
@@ -43,7 +47,7 @@ export default async function RootLayout({
 }>) {
   const h = await headers();
   const pathname = h.get("x-pathname") || "/";
-  const locale = h.get("x-locale") as Locale || defaultLocale;
+  const locale = (h.get("x-locale") as Locale) || defaultLocale;
   const namespaces = pickNamespaces(pathname);
 
   const resources = await loadLocaleResources(locale, namespaces);
@@ -56,8 +60,13 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <I18nProvider locale={locale} namespaces={namespaces} resources={resources}>
+          <I18nProvider
+            locale={locale}
+            namespaces={namespaces}
+            resources={resources}
+          >
             {children}
+            <Toaster position="top-center" richColors />
           </I18nProvider>
         </ThemeProvider>
       </body>
