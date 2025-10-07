@@ -18,6 +18,7 @@ interface CreateProductFormProps {
   onClose: () => void;
   onSuccess?: (message: string) => void;
   onError?: (message: string) => void;
+  onAttemptClose: (isDirty: boolean) => void;
 }
 
 interface GalleryItem {
@@ -31,13 +32,14 @@ export default function CreateProductForm({
   onClose,
   onSuccess,
   onError,
+  onAttemptClose,
 }: CreateProductFormProps) {
   const {
     register,
     handleSubmit,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<ProductCreateDTO>({
     defaultValues: {
       product_code: "",
@@ -146,8 +148,6 @@ export default function CreateProductForm({
   const onSubmit = async (data: ProductCreateDTO) => {
     setIsLoading(true);
     try {
-      // Simulate API call to create product
-      // Replace with actual API call
       console.log("Form data:", data);
       onCreate(data);
       if (onSuccess) {
@@ -159,14 +159,13 @@ export default function CreateProductForm({
       if (onError) {
         onError("Có lỗi xảy ra khi tạo sản phẩm.");
       }
-      // toast.error("Có lỗi xảy ra khi tạo sản phẩm.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleCancel = () => {
-    onClose();
+    onAttemptClose(isDirty); // Pass isDirty to parent
   };
 
   return (
@@ -283,7 +282,6 @@ export default function CreateProductForm({
                   </p>
                 )}
               </div>
-
               <div>
                 <Label
                   htmlFor="sell_price"
