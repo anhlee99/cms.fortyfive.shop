@@ -6,10 +6,10 @@ import { DataTable } from "@/components/widgets/data_table";
 import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PaginatedResponse } from "@/types/pagination";
+import { FilterOption, PaginatedResponse } from "@/types/pagination";
 import { useProductSearchUrl } from "@/hooks/products/useProductsSearch";
 import { useState, useEffect } from "react";
-import { LabelSelect } from "../labels/label-select";
+import { LabelSelect } from "../labels/label-select-2";
 
 const columns = [
   {
@@ -128,9 +128,7 @@ export default function ProductsTable({
 }) {
   const [page, setPage] = useState(data?.pagination.page || 1);
   const [pageSize, setPageSize] = useState(data?.pagination.pageSize || 10);
-  const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
-  const { setParams } = useProductSearchUrl();
-
+  const { params, setParams } = useProductSearchUrl();
   useEffect(() => {
     if (!data) return;
     setPage(data.pagination.page ?? 1);
@@ -170,11 +168,33 @@ export default function ProductsTable({
           <div className="flex items-center gap-2 w-full">
             <Input placeholder="Tìm kiếm..." className="max-w-sm flex-1" />
             <LabelSelect
-              value={selectedLabels}
+              value={
+                params.filters?.find((f) => f.field === "labels")?.value
+                  ? (
+                      params.filters?.find((f) => f.field === "labels")
+                        ?.value as string
+                    ).split(",")
+                  : []
+              }
               onValueChange={(newLabels) => {
-                setSelectedLabels(newLabels);
                 setPage(1);
-                setParams({ page: 1, labels: newLabels });
+
+                let filters = params.filters || [];
+                if (newLabels.length > 0) {
+                  // Remove existing label filter if any
+                  filters = filters.filter((f) => f.field !== "labels");
+                  // Add new label filter
+                  filters.push({
+                    field: "labels",
+                    operator: "in",
+                    value: newLabels.join(","),
+                  } as FilterOption);
+                } else {
+                  // Clear label filter if none selected
+                  filters = filters.filter((f) => f.field !== "labels");
+                }
+
+                setParams({ page: 1, filters: filters });
               }}
               placeholder="Tìm kiếm theo thẻ"
               className="flex gap-2 w-50"

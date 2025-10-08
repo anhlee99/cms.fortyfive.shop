@@ -1,7 +1,11 @@
 "use client";
 import * as React from "react";
 import { ProductSearchParams } from "@/services/products/product.type";
-import { DEFAULT_SEARCH, toQuery } from "@/types/pagination";
+import {
+  DEFAULT_SEARCH,
+  toQuery,
+  getSearchParamsFromSearchParams,
+} from "@/types/pagination";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export const DEFAULT_PRODUCT_SEARCH: Required<
@@ -12,28 +16,6 @@ export const DEFAULT_PRODUCT_SEARCH: Required<
   q: undefined,
   status: undefined,
 };
-
-function oneOf<T extends string | undefined>(
-  v: string | null,
-  allowed: readonly T[],
-  fallback: T
-): T {
-  return v && (allowed as readonly string[]).includes(v) ? (v as T) : fallback;
-}
-
-function coerceInt(v: string | null, fb: number) {
-  const n = Number(v);
-  return Number.isInteger(n) && n > 0 ? n : fb;
-}
-
-function parseJson<T>(v: string | null): T | undefined {
-  if (!v) return undefined;
-  try {
-    return JSON.parse(v) as T;
-  } catch {
-    return undefined;
-  }
-}
 
 export function normalizeSearch(
   p: ProductSearchParams = {}
@@ -57,19 +39,8 @@ export function useProductSearchUrl() {
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
-
   const params = React.useMemo<ProductSearchParams>(() => {
-    return {
-      q: (sp.get("q") || undefined)?.trim(),
-      page: coerceInt(sp.get("page"), DEFAULT_PRODUCT_SEARCH.page),
-      limit: coerceInt(sp.get("limit"), DEFAULT_PRODUCT_SEARCH.limit),
-      sort:
-        parseJson<ProductSearchParams["sort"]>(sp.get("sort")) ??
-        DEFAULT_PRODUCT_SEARCH.sort,
-      filters:
-        parseJson<ProductSearchParams["filters"]>(sp.get("filters")) ??
-        DEFAULT_PRODUCT_SEARCH.filters,
-    };
+    return getSearchParamsFromSearchParams<ProductSearchParams>(sp);
   }, [sp]);
 
   const setParams = React.useCallback(

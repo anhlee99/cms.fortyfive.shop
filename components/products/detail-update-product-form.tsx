@@ -7,7 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { IconLoader } from "@tabler/icons-react";
-import { ProductCreateDTO, Product } from "@/services/products/product.type";
+import {
+  Product,
+  GalleryItem,
+  ProductUpdateDTO,
+} from "@/services/products/product.type";
+import { Label as LabelModle } from "@/services/labels/label.type";
 import { Textarea } from "../ui/textarea";
 import { ImageManyUploads } from "../widgets/ImageManyUploads";
 import { LabelSelect } from "../labels/label-select";
@@ -16,6 +21,9 @@ import { formatPrice } from "@/hooks/utils/formatPrice";
 
 // Default fallback product data
 const defaultProduct: Product = {
+  user_id: "",
+  id: "",
+  created_at: "",
   product_code: "",
   name: "",
   short_description: "",
@@ -25,21 +33,16 @@ const defaultProduct: Product = {
   import_price: 0,
   vat: 0,
   sell_price: 0,
-  label_ids: [],
+  display_price: 0,
+  labels: [] as LabelModle[],
 };
 
 interface DetailAndUpdateProductFormProps {
   product?: Product;
-  onUpdate: (product: ProductCreateDTO) => void;
+  onUpdate: (product: ProductUpdateDTO) => void;
   onClose: () => void;
   onSuccess?: (message: string) => void;
   onError?: (message: string) => void;
-}
-
-interface GalleryItem {
-  url: string;
-  name: string;
-  mimeType: string;
 }
 
 export default function DetailAndUpdateProductForm({
@@ -69,7 +72,7 @@ export default function DetailAndUpdateProductForm({
     watch,
     formState: { errors },
     reset,
-  } = useForm<ProductCreateDTO>({
+  } = useForm<ProductUpdateDTO>({
     defaultValues: {
       product_code: product.product_code || "",
       name: product.name || "",
@@ -80,7 +83,8 @@ export default function DetailAndUpdateProductForm({
       import_price: product.import_price || 0,
       vat: product.vat || 0,
       sell_price: product.sell_price || 0,
-      label_ids: product.label_ids || [],
+      // mapping labels to label_ids
+      label_ids: product.labels ? product.labels.map((label) => label.id) : [],
     },
     resolver: async (data) => {
       const errors: any = {};
@@ -148,7 +152,7 @@ export default function DetailAndUpdateProductForm({
       import_price: product.import_price || 0,
       vat: product.vat || 0,
       sell_price: product.sell_price || 0,
-      label_ids: product.label_ids || [],
+      label_ids: product.labels ? product.labels.map((label) => label.id) : [],
     });
     setGalleryPreviews(product.gallery || []);
     setDisplayImportPrice(formatPrice(product.import_price || 0));
@@ -201,7 +205,7 @@ export default function DetailAndUpdateProductForm({
     setValue("gallery", updatedGallery);
   };
 
-  const onSubmit = async (data: ProductCreateDTO) => {
+  const onSubmit = async (data: ProductUpdateDTO) => {
     setIsLoading(true);
     try {
       onUpdate(data);
@@ -240,7 +244,7 @@ export default function DetailAndUpdateProductForm({
       import_price: product.import_price || 0,
       vat: product.vat || 0,
       sell_price: product.sell_price || 0,
-      label_ids: product.label_ids || [],
+      label_ids: product.labels ? product.labels.map((label) => label.id) : [],
     });
     setGalleryPreviews(product.gallery || []);
     setEditingFields({
@@ -533,8 +537,10 @@ export default function DetailAndUpdateProductForm({
                       className="text-gray-800 cursor-pointer hover:bg-gray-100 p-2 rounded"
                       onClick={() => handleFieldClick("label_ids")}
                     >
-                      {product.label_ids && product.label_ids.length > 0
-                        ? product.label_ids.join(", ")
+                      {product.labels && product.labels.length > 0
+                        ? product.labels
+                            .map((label) => label.display_name)
+                            .join(", ")
                         : "Không có thẻ"}
                     </p>
                   )}

@@ -13,12 +13,12 @@ import {
 import { useProducts } from "@/hooks/products/useProduct";
 import ProductsTable from "@/components/products/products-table";
 import { Product } from "@/services/products/product.type";
-import DetailAndUpdateProductForm from "@/components/products/DetailAndUpdateProductForm";
+import DetailAndUpdateProductForm from "@/components/products/detail-update-product-form";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
 
 export default function Page() {
-  const { data, isLoading, newProduct } = useProducts({
+  const { data, isLoading, newProduct, updateProduct } = useProducts({
     data: [],
     pagination: {
       page: 1,
@@ -110,7 +110,17 @@ export default function Page() {
           {selectedProduct ? (
             <DetailAndUpdateProductForm
               product={selectedProduct}
-              onUpdate={() => {}}
+              onUpdate={(p) => {
+                updateProduct(selectedProduct.id, p)
+                  .then(() => {
+                    // refetch or update local state if needed
+                    console.log("Product updated:", p);
+                    setSelectedProduct({ ...selectedProduct, ...p });
+                  })
+                  .catch((error) => {
+                    console.error("Error updating product:", error);
+                  });
+              }}
               onClose={handleCancelEdit}
               onSuccess={() => {
                 console.log("Product updated successfully!");

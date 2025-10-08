@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { ShopSearchParams, ShopStatus } from "@/services/shops/shop.type";
+import { LabelSearchParams } from "@/services/labels/label.type";
 import {
   DEFAULT_SEARCH,
   toQuery,
@@ -8,46 +8,45 @@ import {
 } from "@/types/pagination";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-export const DEFAULT_SHOP_SEARCH: Required<
-  Pick<ShopSearchParams, "page" | "limit">
-> &
-  ShopSearchParams = {
+export const DEFAULT_LABEL_SEARCH: LabelSearchParams = {
   ...DEFAULT_SEARCH,
+  limit: 30,
+  type: undefined,
   q: undefined,
-  status: undefined,
 };
 
-export function normalizeSearch(p: ShopSearchParams = {}): ShopSearchParams {
+export function normalizeSearch(p: LabelSearchParams = {}): LabelSearchParams {
   return {
-    ...DEFAULT_SHOP_SEARCH,
+    ...DEFAULT_LABEL_SEARCH,
     ...p,
     page:
       typeof p.page === "number" && p.page > 0
         ? p.page
-        : DEFAULT_SHOP_SEARCH.page,
+        : DEFAULT_LABEL_SEARCH.page,
     limit:
       typeof p.limit === "number" && p.limit > 0 && p.limit <= 100
         ? p.limit
-        : DEFAULT_SHOP_SEARCH.limit,
-    status: p.status ?? DEFAULT_SHOP_SEARCH.status,
+        : DEFAULT_LABEL_SEARCH.limit,
+    type: p.type ?? DEFAULT_LABEL_SEARCH.type,
   };
 }
 
-export function useShopSearchUrl() {
+export function useLabelSearchUrl() {
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
 
-  const params = React.useMemo<ShopSearchParams>(() => {
-    return getSearchParamsFromSearchParams<ShopSearchParams>(sp);
+  const params = React.useMemo<LabelSearchParams>(() => {
+    return getSearchParamsFromSearchParams<LabelSearchParams>(sp);
   }, [sp]);
 
   const setParams = React.useCallback(
     (
-      patch: Partial<ShopSearchParams>,
+      patch: Partial<LabelSearchParams>,
       opts?: { replace?: boolean; scroll?: boolean }
     ) => {
-      const next: ShopSearchParams = { ...params, ...patch };
+      const next: LabelSearchParams = { ...params, ...patch };
+      console.log(next);
       const url = `${pathname}${toQuery(next)}`;
       opts?.replace ?? true
         ? router.replace(url, { scroll: opts?.scroll ?? false })

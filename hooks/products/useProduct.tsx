@@ -5,8 +5,9 @@ import {
   Product,
   ProductCreateDTO,
   ProductSearchParams,
+  ProductUpdateDTO,
 } from "@/services/products/product.type";
-import { list, create, getById } from "@/services/products/product.api";
+import { list, create, getById, update } from "@/services/products/product.api";
 import { useProductSearchUrl, normalizeSearch } from "./useProductsSearch";
 
 function keyFromParams(params?: ProductSearchParams) {
@@ -41,12 +42,19 @@ export function useProducts(initialData?: PaginatedResponse<Product>) {
     return product;
   };
 
+  const updateProduct = async (id: string, payload: ProductUpdateDTO) => {
+    const updatedProduct = await update(id, payload);
+    await mutate();
+    return updatedProduct;
+  };
+
   return {
     data,
     isLoading,
     error,
     mutate,
     newProduct,
+    updateProduct,
     getProduct,
   };
 }

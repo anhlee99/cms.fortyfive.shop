@@ -1,97 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { IconChevronDown } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-
-// Mock data for labels with icon as image URLs
-const mockLabels: Label[] = [
-  {
-    id: "1",
-    created_at: "2025-10-07",
-    user_id: "user1",
-    display_name: "Urgent",
-    description: "High priority tasks",
-    type: "SYSTEM",
-    extra_info: {
-      color: "#FF0000",
-      icon: "https://icons.veryicon.com/png/o/miscellaneous/logo-design-of-lingzhuyun/icon-correct-24-1.png",
-    },
-  },
-  {
-    id: "2",
-    created_at: "2025-10-07",
-    user_id: "user1",
-    display_name: "Bug",
-    description: "Issues to fix",
-    type: "SYSTEM",
-    extra_info: {
-      color: "#FFA500",
-      icon: "https://icons.veryicon.com/png/o/miscellaneous/logo-design-of-lingzhuyun/icon-correct-24-1.png",
-    },
-  },
-  {
-    id: "3",
-    created_at: "2025-10-07",
-    user_id: "user1",
-    display_name: "Feature",
-    description: "New features",
-    type: "CUSTOM",
-    extra_info: {
-      color: "#008000",
-      icon: "https://icons.veryicon.com/png/o/miscellaneous/logo-design-of-lingzhuyun/icon-correct-24-1.png",
-    },
-  },
-  {
-    id: "4",
-    created_at: "2025-10-07",
-    user_id: "user1",
-    display_name: "Urgent",
-    description: "High priority tasks",
-    type: "SYSTEM",
-    extra_info: {
-      color: "#FF0000",
-      icon: "https://icons.veryicon.com/png/o/miscellaneous/logo-design-of-lingzhuyun/icon-correct-24-1.png",
-    },
-  },
-  {
-    id: "5",
-    created_at: "2025-10-07",
-    user_id: "user1",
-    display_name: "Bug",
-    description: "Issues to fix",
-    type: "SYSTEM",
-    extra_info: {
-      color: "#FFA500",
-      icon: "https://icons.veryicon.com/png/o/miscellaneous/logo-design-of-lingzhuyun/icon-correct-24-1.png",
-    },
-  },
-  {
-    id: "6",
-    created_at: "2025-10-07",
-    user_id: "user1",
-    display_name: "Feature",
-    description: "New features",
-    type: "CUSTOM",
-    extra_info: {
-      color: "#008000",
-      icon: "https://icons.veryicon.com/png/o/miscellaneous/logo-design-of-lingzhuyun/icon-correct-24-1.png",
-    },
-  },
-];
-
-interface Label {
-  id: string;
-  created_at: string;
-  user_id: string;
-  display_name: string;
-  description: string;
-  type: string;
-  extra_info?: { color: string; icon: string };
-}
+import type { Label } from "@/services/labels/label.type";
+import { useLabels } from "@/hooks/labels/useLabel";
 
 interface LabelSelectProps {
   onValueChange: (value: string[]) => void;
@@ -112,17 +28,29 @@ export function LabelSelect({
   disabled,
   labelPosition = "top",
 }: LabelSelectProps) {
+  const { data } = useLabels(); // uses SWR key /api/shops?params
   const [searchTerm, setSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const [labels] = useState<Label[]>(mockLabels);
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // derive labels from data, update when data changes
+  const labels: Label[] = useMemo(() => {
+    return data?.data ?? [];
+  }, [data]);
+
+  // filtered labels by searchTerm
+  const filteredLabels = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    if (!q) return labels;
+    return labels.filter((l) => l.display_name.toLowerCase().includes(q));
+  }, [labels, searchTerm]);
+
   // Filter labels based on search term
-  const filteredLabels = labels.filter((label) =>
-    label.display_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // const filteredLabels = labels.filter((label) =>
+  //   label.display_name.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
 
   // Close dropdown when clicking outside
   useEffect(() => {

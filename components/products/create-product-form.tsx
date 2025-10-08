@@ -7,7 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { IconLoader } from "@tabler/icons-react";
-import { ProductCreateDTO } from "@/services/products/product.type";
+import {
+  ProductCreateDTO,
+  GalleryItem,
+} from "@/services/products/product.type";
 import { Textarea } from "../ui/textarea";
 import { ImageManyUploads } from "../widgets/ImageManyUploads";
 import { LabelSelect } from "../labels/label-select";
@@ -19,12 +22,6 @@ interface CreateProductFormProps {
   onSuccess?: (message: string) => void;
   onError?: (message: string) => void;
   onAttemptClose: (isDirty: boolean) => void;
-}
-
-interface GalleryItem {
-  url: string;
-  name: string;
-  mimeType: string;
 }
 
 export default function CreateProductForm({
@@ -73,8 +70,9 @@ export default function CreateProductForm({
         errors.sell_price = { message: "Giá bán phải là số hợp lệ." };
       if (data.label_ids.length === 0)
         errors.label_ids = { message: "Vui lòng chọn ít nhất một thẻ." };
+      const hasErrors = Object.keys(errors).length > 0;
       return {
-        values: Object.keys(errors).length ? {} : data,
+        values: hasErrors ? {} : data,
         errors,
       };
     },
@@ -85,19 +83,22 @@ export default function CreateProductForm({
   const [galleryPreviews, setGalleryPreviews] = useState<GalleryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  // watch values (stable references from react-hook-form)
   const sellPrice = watch("sell_price");
   const importPrice = watch("import_price");
+
+  // use watch values in state initializers
   const [displayImportPrice, setDisplayImportPrice] = useState<string>(
-    formatPrice(watch("import_price") || 0)
+    formatPrice(importPrice || 0)
   );
   const [displaySellPrice, setDisplaySellPrice] = useState<string>(
-    formatPrice(watch("sell_price") || 0)
+    formatPrice(sellPrice || 0)
   );
 
   useEffect(() => {
-    setDisplayImportPrice(formatPrice(watch("import_price") || 0));
-    setDisplaySellPrice(formatPrice(watch("sell_price") || 0));
-  }, [watch("import_price"), watch("sell_price")]);
+    setDisplayImportPrice(formatPrice(importPrice || 0));
+    setDisplaySellPrice(formatPrice(sellPrice || 0));
+  }, [importPrice, sellPrice]);
 
   const handlePriceChange = (
     e: React.ChangeEvent<HTMLInputElement>,
