@@ -166,7 +166,7 @@ export default function ProductsTable({
         onRowClick={onRowClick}
         customToolbar={() => (
           <div className="flex items-center gap-2 w-full">
-            <Input placeholder="Tìm kiếm..." className="max-w-sm flex-1" />
+            <Input placeholder="Tìm kiếm..." className="max-w-sm flex-1 h-11" />
             <LabelSelect
               value={
                 params.filters?.find((f) => f.field === "labels")?.value
@@ -197,8 +197,6 @@ export default function ProductsTable({
                 setParams({ page: 1, filters: filters });
               }}
               placeholder="Tìm kiếm theo thẻ"
-              className="flex gap-2 w-50"
-              labelPosition="bottom"
             />
 
             <Button className="ml-auto" onClick={onCreateClick}>

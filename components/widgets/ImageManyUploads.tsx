@@ -22,7 +22,7 @@ interface ImageManyUploadsProps {
   onFilesSelect: (files: File[]) => void;
   onRemove: (index: number) => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
-  label: string;
+  label?: string;
   dragText?: string;
 }
 

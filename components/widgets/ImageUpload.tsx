@@ -16,7 +16,7 @@ interface ImageUploadProps {
   handleRemoveImage: () => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   onImageSelect: (file: File) => void;
-  label: string;
+  label?: string;
   dragText?: string;
 }
 

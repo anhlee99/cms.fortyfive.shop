@@ -15,6 +15,7 @@ import {
 import { Label as LabelModle } from "@/services/labels/label.type";
 import { Textarea } from "../ui/textarea";
 import { ImageManyUploads } from "../widgets/ImageManyUploads";
+import { ImageUpload } from "../widgets/ImageUpload";
 import { LabelSelect } from "../labels/label-select";
 import Image from "next/image";
 import { formatPrice } from "@/hooks/utils/formatPrice";
@@ -51,27 +52,13 @@ export default function DetailAndUpdateProductForm({
   onSuccess,
   onError,
 }: DetailAndUpdateProductFormProps) {
-  const [editingFields, setEditingFields] = useState<{
-    [key: string]: boolean;
-  }>({
-    product_code: false,
-    name: false,
-    short_description: false,
-    description: false,
-    import_price: false,
-    sell_price: false,
-    vat: false,
-    label_ids: false,
-    gallery: false,
-  });
-
   const {
     register,
     handleSubmit,
     setValue,
     watch,
-    formState: { errors },
     reset,
+    formState: { errors, isDirty },
   } = useForm<ProductUpdateDTO>({
     defaultValues: {
       product_code: product.product_code || "",
@@ -83,7 +70,6 @@ export default function DetailAndUpdateProductForm({
       import_price: product.import_price || 0,
       vat: product.vat || 0,
       sell_price: product.sell_price || 0,
-      // mapping labels to label_ids
       label_ids: product.labels ? product.labels.map((label) => label.id) : [],
     },
     resolver: async (data) => {
@@ -114,11 +100,23 @@ export default function DetailAndUpdateProductForm({
   });
 
   const galleryInputRef = useRef<HTMLInputElement>(null);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const [isDraggingGallery, setIsDraggingGallery] = useState(false);
+  const [isDraggingThumbnail, setIsDraggingThumbnail] = useState(false);
   const [galleryPreviews, setGalleryPreviews] = useState<GalleryItem[]>(
     product.gallery || []
   );
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(
+    product.thumbnail || null
+  );
   const [isLoading, setIsLoading] = useState(false);
+  const [editingFields, setEditingFields] = useState<{
+    thumbnail: boolean;
+    gallery: boolean;
+  }>({
+    thumbnail: !product.thumbnail,
+    gallery: !product.gallery || product.gallery.length === 0,
+  });
 
   const [displayImportPrice, setDisplayImportPrice] = useState<string>(
     formatPrice(product.import_price || 0)
@@ -155,18 +153,12 @@ export default function DetailAndUpdateProductForm({
       label_ids: product.labels ? product.labels.map((label) => label.id) : [],
     });
     setGalleryPreviews(product.gallery || []);
+    setThumbnailPreview(product.thumbnail || null);
     setDisplayImportPrice(formatPrice(product.import_price || 0));
     setDisplaySellPrice(formatPrice(product.sell_price || 0));
     setEditingFields({
-      product_code: false,
-      name: false,
-      short_description: false,
-      description: false,
-      import_price: false,
-      sell_price: false,
-      vat: false,
-      label_ids: false,
-      gallery: false,
+      thumbnail: !product.thumbnail,
+      gallery: !product.gallery || product.gallery.length === 0,
     });
   }, [product, reset]);
 
@@ -192,6 +184,7 @@ export default function DetailAndUpdateProductForm({
             const updatedGallery = [...galleryPreviews, ...newGalleryItems];
             setGalleryPreviews(updatedGallery);
             setValue("gallery", updatedGallery);
+            setEditingFields((prev) => ({ ...prev, gallery: false }));
           }
         }
       };
@@ -199,10 +192,31 @@ export default function DetailAndUpdateProductForm({
     });
   };
 
+  const handleThumbnailSelect = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (reader.result) {
+        setThumbnailPreview(reader.result as string);
+        setValue("thumbnail", reader.result as string);
+        setEditingFields((prev) => ({ ...prev, thumbnail: false }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveThumbnail = () => {
+    setThumbnailPreview(null);
+    setValue("thumbnail", "");
+    setEditingFields((prev) => ({ ...prev, thumbnail: true }));
+  };
+
   const handleRemoveGalleryItem = (index: number) => {
     const updatedGallery = galleryPreviews.filter((_, i) => i !== index);
     setGalleryPreviews(updatedGallery);
     setValue("gallery", updatedGallery);
+    if (updatedGallery.length === 0) {
+      setEditingFields((prev) => ({ ...prev, gallery: true }));
+    }
   };
 
   const onSubmit = async (data: ProductUpdateDTO) => {
@@ -213,15 +227,8 @@ export default function DetailAndUpdateProductForm({
         onSuccess("Cập nhật sản phẩm thành công!");
       }
       setEditingFields({
-        product_code: false,
-        name: false,
-        short_description: false,
-        description: false,
-        import_price: false,
-        sell_price: false,
-        vat: false,
-        label_ids: false,
-        gallery: false,
+        thumbnail: !data.thumbnail,
+        gallery: !data.gallery || data.gallery.length === 0,
       });
     } catch (err) {
       console.error(err);
@@ -247,120 +254,91 @@ export default function DetailAndUpdateProductForm({
       label_ids: product.labels ? product.labels.map((label) => label.id) : [],
     });
     setGalleryPreviews(product.gallery || []);
+    setThumbnailPreview(product.thumbnail || null);
+    setDisplayImportPrice(formatPrice(product.import_price || 0));
+    setDisplaySellPrice(formatPrice(product.sell_price || 0));
     setEditingFields({
-      product_code: false,
-      name: false,
-      short_description: false,
-      description: false,
-      import_price: false,
-      sell_price: false,
-      vat: false,
-      label_ids: false,
-      gallery: false,
+      thumbnail: !product.thumbnail,
+      gallery: !product.gallery || product.gallery.length === 0,
     });
   };
 
-  const handleFieldClick = (field: string) => {
+  const handleFieldClick = (field: "thumbnail" | "gallery") => {
     setEditingFields((prev) => ({ ...prev, [field]: true }));
   };
 
-  const isAnyFieldEditing = Object.values(editingFields).some((value) => value);
+  const toggleGalleryEdit = () => {
+    setEditingFields((prev) => ({ ...prev, gallery: !prev.gallery }));
+  };
+
+  const toggleThumbnailEdit = () => {
+    setEditingFields((prev) => ({ ...prev, thumbnail: !prev.thumbnail }));
+  };
 
   return (
     <Card className="w-full bg-transparent border-0 shadow-none py-0 gap-0">
       <CardHeader className="bg-transparent p-0" />
       <form onSubmit={handleSubmit(onSubmit)}>
-        <CardContent className="space-y-8 pt-0 pb-5 px-2 max-h-[580px] overflow-y-auto">
+        <CardContent className="space-y-8 pt-0 pb-20 px-2 max-h-[580px] overflow-y-auto">
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center space-x-4">
+              <div>
                 <Label
                   htmlFor="product_code"
-                  className="text-gray-800 font-semibold text-base w-1/3"
+                  className="text-gray-800 font-medium pb-2"
                 >
-                  Mã sản phẩm:
+                  Mã sản phẩm <span className="text-red-600">*</span>
                 </Label>
-                <div className="flex-1">
-                  {editingFields.product_code ? (
-                    <Input
-                      id="product_code"
-                      {...register("product_code")}
-                      placeholder="Nhập mã sản phẩm"
-                      className={`text-gray-800 border-gray-300 focus:ring-orange-500 focus:ring-2 ${
-                        errors.product_code ? "border-red-500" : ""
-                      }`}
-                    />
-                  ) : (
-                    <p
-                      className="text-gray-800 cursor-pointer hover:bg-gray-100 p-2 rounded"
-                      onClick={() => handleFieldClick("product_code")}
-                    >
-                      {product.product_code || "Chưa có mã sản phẩm"}
-                    </p>
-                  )}
-                  {errors.product_code && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.product_code.message}
-                    </p>
-                  )}
-                </div>
+                <Input
+                  id="product_code"
+                  {...register("product_code")}
+                  placeholder="Nhập mã sản phẩm"
+                  className={`text-gray-800 border-gray-300 focus:ring-orange-500 focus:ring-2 ${
+                    errors.product_code ? "border-red-500" : ""
+                  }`}
+                />
+                {errors.product_code && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.product_code.message}
+                  </p>
+                )}
               </div>
-              <div className="flex items-center space-x-4">
+              <div>
                 <Label
                   htmlFor="name"
-                  className="text-gray-800 font-semibold text-base w-1/3"
+                  className="text-gray-800 font-medium pb-2"
                 >
-                  Tên sản phẩm:
+                  Tên sản phẩm <span className="text-red-600">*</span>
                 </Label>
-                <div className="flex-1">
-                  {editingFields.name ? (
-                    <Input
-                      id="name"
-                      {...register("name")}
-                      placeholder="Nhập tên sản phẩm"
-                      className={`text-gray-800 border-gray-300 focus:ring-orange-500 focus:ring-2 ${
-                        errors.name ? "border-red-500" : ""
-                      }`}
-                    />
-                  ) : (
-                    <p
-                      className="text-gray-800 cursor-pointer hover:bg-gray-100 p-2 rounded"
-                      onClick={() => handleFieldClick("name")}
-                    >
-                      {product.name || "Chưa có tên sản phẩm"}
-                    </p>
-                  )}
-                  {errors.name && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.name.message}
-                    </p>
-                  )}
-                </div>
+                <Input
+                  id="name"
+                  {...register("name")}
+                  placeholder="Nhập tên sản phẩm"
+                  className={`text-gray-800 border-gray-300 focus:ring-orange-500 focus:ring-2 ${
+                    errors.name ? "border-red-500" : ""
+                  }`}
+                />
+                {errors.name && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.name.message}
+                  </p>
+                )}
               </div>
               <div className="col-span-full">
                 <Label
                   htmlFor="short_description"
-                  className="text-gray-800 font-semibold text-base pb-2"
+                  className="text-gray-800 font-medium pb-2"
                 >
-                  Mô tả ngắn:
+                  Mô tả ngắn <span className="text-red-600">*</span>
                 </Label>
-                {editingFields.short_description ? (
-                  <Textarea
-                    id="short_description"
-                    {...register("short_description")}
-                    placeholder="Nhập mô tả ngắn"
-                    className={`text-gray-800 border-gray-300 focus:ring-orange-500 focus:ring-2 ${
-                      errors.short_description ? "border-red-500" : ""
-                    }`}
-                  />
-                ) : (
-                  <p
-                    className="text-gray-800 cursor-pointer hover:bg-gray-100 p-2 rounded"
-                    onClick={() => handleFieldClick("short_description")}
-                  >
-                    {product.short_description || "Chưa có mô tả ngắn"}
-                  </p>
-                )}
+                <Textarea
+                  id="short_description"
+                  {...register("short_description")}
+                  placeholder="Nhập mô tả ngắn"
+                  className={`text-gray-800 border-gray-300 focus:ring-orange-500 focus:ring-2 ${
+                    errors.short_description ? "border-red-500" : ""
+                  }`}
+                />
                 {errors.short_description && (
                   <p className="text-red-500 text-sm mt-1">
                     {errors.short_description.message}
@@ -370,186 +348,118 @@ export default function DetailAndUpdateProductForm({
               <div className="col-span-full">
                 <Label
                   htmlFor="description"
-                  className="text-gray-800 font-semibold text-base pb-2"
+                  className="text-gray-800 font-medium pb-2"
                 >
-                  Mô tả chi tiết:
+                  Mô tả chi tiết <span className="text-red-600">*</span>
                 </Label>
-                {editingFields.description ? (
-                  <Textarea
-                    id="description"
-                    {...register("description")}
-                    placeholder="Nhập mô tả chi tiết"
-                    className={`text-gray-800 border-gray-300 focus:ring-orange-500 focus:ring-2 ${
-                      errors.description ? "border-red-500" : ""
-                    }`}
-                  />
-                ) : (
-                  <p
-                    className="text-gray-800 cursor-pointer hover:bg-gray-100 p-2 rounded"
-                    onClick={() => handleFieldClick("description")}
-                  >
-                    {product.description || "Chưa có mô tả chi tiết"}
-                  </p>
-                )}
+                <Textarea
+                  id="description"
+                  {...register("description")}
+                  placeholder="Nhập mô tả chi tiết"
+                  className={`text-gray-800 h-[100px] border-gray-300 focus:ring-orange-500 focus:ring-2 ${
+                    errors.description ? "border-red-500" : ""
+                  }`}
+                />
                 {errors.description && (
                   <p className="text-red-500 text-sm mt-1">
                     {errors.description.message}
                   </p>
                 )}
               </div>
-              <div className="flex items-center space-x-4">
+              <div>
                 <Label
                   htmlFor="import_price"
-                  className="text-gray-800 font-semibold text-base w-1/3"
+                  className="text-gray-800 font-medium pb-2"
                 >
-                  Giá nhập:
+                  Giá nhập <span className="text-red-600">*</span>
                 </Label>
-                <div className="flex-1">
-                  {editingFields.import_price ? (
-                    <Input
-                      id="import_price"
-                      type="text"
-                      value={displayImportPrice}
-                      onChange={(e) => handlePriceChange(e, "import_price")}
-                      placeholder="Nhập giá nhập"
-                      className={`[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none text-gray-800 border-gray-300 focus:ring-orange-500 focus:ring-2 ${
-                        errors.import_price ? "border-red-500" : ""
-                      }`}
-                    />
-                  ) : (
-                    <p
-                      className="text-gray-800 cursor-pointer hover:bg-gray-100 p-2 rounded"
-                      onClick={() => handleFieldClick("import_price")}
-                    >
-                      {product.import_price
-                        ? formatPrice(product.import_price)
-                        : "Chưa có giá nhập"}
-                    </p>
-                  )}
-                  {errors.import_price && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.import_price.message}
-                    </p>
-                  )}
-                </div>
+                <Input
+                  id="import_price"
+                  type="text"
+                  value={displayImportPrice}
+                  onChange={(e) => handlePriceChange(e, "import_price")}
+                  placeholder="Nhập giá nhập"
+                  className={`[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none text-gray-800 border-gray-300 focus:ring-orange-500 focus:ring-2 ${
+                    errors.import_price ? "border-red-500" : ""
+                  }`}
+                />
+                {errors.import_price && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.import_price.message}
+                  </p>
+                )}
               </div>
-              <div className="flex items-center space-x-4">
+              <div>
                 <Label
                   htmlFor="sell_price"
-                  className="text-gray-800 font-semibold text-base w-1/3"
+                  className="text-gray-800 font-medium pb-2"
                 >
-                  Giá bán:
+                  Giá bán <span className="text-red-600">*</span>
                 </Label>
-                <div className="flex-1">
-                  {editingFields.sell_price ? (
-                    <Input
-                      id="sell_price"
-                      type="text"
-                      value={displaySellPrice}
-                      onChange={(e) => handlePriceChange(e, "sell_price")}
-                      placeholder="Nhập giá bán"
-                      className={`[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none text-gray-800 border-gray-300 focus:ring-orange-500 focus:ring-2 ${
-                        errors.sell_price ? "border-red-500" : ""
-                      }`}
-                    />
-                  ) : (
-                    <p
-                      className="text-gray-800 cursor-pointer hover:bg-gray-100 p-2 rounded"
-                      onClick={() => handleFieldClick("sell_price")}
-                    >
-                      {product.sell_price
-                        ? formatPrice(product.sell_price)
-                        : "Chưa có giá bán"}
-                    </p>
-                  )}
-                  {errors.sell_price && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.sell_price.message}
-                    </p>
-                  )}
-                  {(editingFields.sell_price || editingFields.import_price) &&
-                    sellPrice > 0 &&
-                    importPrice > 0 && (
-                      <p className="text-gray-500 text-sm mt-1">
-                        Tỷ lệ chênh: {margin}%
-                      </p>
-                    )}
-                  {(editingFields.sell_price || editingFields.import_price) &&
-                    sellPrice > 0 &&
-                    importPrice > 0 && (
-                      <p className="text-gray-500 text-sm mt-1">
-                        Tỷ lệ chênh: {margin}%
-                      </p>
-                    )}
-                </div>
+                {sellPrice > 0 && importPrice > 0 && (
+                  <span
+                    className={`text-xs ml-1 ${
+                      Number(margin) > 0 ? "text-green-500" : "text-red-500"
+                    }`}
+                  >
+                    Tỷ lệ chênh: {margin}%
+                  </span>
+                )}
+                <Input
+                  id="sell_price"
+                  type="text"
+                  value={displaySellPrice}
+                  onChange={(e) => handlePriceChange(e, "sell_price")}
+                  placeholder="Nhập giá bán"
+                  className={`[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none text-gray-800 border-gray-300 focus:ring-orange-500 focus:ring-2 ${
+                    errors.sell_price ? "border-red-500" : ""
+                  }`}
+                />
+                {errors.sell_price && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.sell_price.message}
+                  </p>
+                )}
               </div>
-              <div className="flex items-center space-x-4">
-                <Label
-                  htmlFor="vat"
-                  className="text-gray-800 font-semibold text-base w-1/3"
-                >
-                  VAT (%):
+              <div>
+                <Label htmlFor="vat" className="text-gray-800 font-medium pb-2">
+                  VAT (%) <span className="text-red-600">*</span>
                 </Label>
-                <div className="flex-1">
-                  {editingFields.vat ? (
-                    <Input
-                      id="vat"
-                      type="number"
-                      step="0.01"
-                      {...register("vat", { valueAsNumber: true })}
-                      placeholder="Nhập VAT"
-                      className={`[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none text-gray-800 border-gray-300 focus:ring-orange-500 focus:ring-2 ${
-                        errors.vat ? "border-red-500" : ""
-                      }`}
-                    />
-                  ) : (
-                    <p
-                      className="text-gray-800 cursor-pointer hover:bg-gray-100 p-2 rounded"
-                      onClick={() => handleFieldClick("vat")}
-                    >
-                      {product.vat !== undefined ? product.vat : "Chưa có VAT"}
-                    </p>
-                  )}
-                  {errors.vat && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.vat.message}
-                    </p>
-                  )}
-                </div>
+                <Input
+                  id="vat"
+                  type="number"
+                  step="0.01"
+                  min={0}
+                  {...register("vat", { valueAsNumber: true })}
+                  placeholder="Nhập VAT"
+                  className={`[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none text-gray-800 h-11 border-gray-300 focus:ring-orange-500 focus:ring-2 ${
+                    errors.vat ? "border-red-500" : ""
+                  }`}
+                />
+                {errors.vat && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.vat.message}
+                  </p>
+                )}
               </div>
-              <div className="flex items-center space-x-4">
+              <div>
                 <Label
                   htmlFor="label_ids"
-                  className="text-gray-800 font-semibold text-base w-1/3"
+                  className="text-gray-800 font-medium pb-2"
                 >
-                  Thẻ:
+                  Thẻ <span className="text-red-600">*</span>
                 </Label>
-                <div className="flex-1">
-                  {editingFields.label_ids ? (
-                    <LabelSelect
-                      value={watch("label_ids")}
-                      onValueChange={(value) => setValue("label_ids", value)}
-                      placeholder="Chọn thẻ"
-                      className="w-2/3"
-                    />
-                  ) : (
-                    <p
-                      className="text-gray-800 cursor-pointer hover:bg-gray-100 p-2 rounded"
-                      onClick={() => handleFieldClick("label_ids")}
-                    >
-                      {product.labels && product.labels.length > 0
-                        ? product.labels
-                            .map((label) => label.display_name)
-                            .join(", ")
-                        : "Không có thẻ"}
-                    </p>
-                  )}
-                  {errors.label_ids && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.label_ids.message}
-                    </p>
-                  )}
-                </div>
+                <LabelSelect
+                  value={watch("label_ids")}
+                  onValueChange={(value) => setValue("label_ids", value)}
+                  placeholder="Chọn thẻ"
+                  className="w-full"
+                />
+                {errors.label_ids && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.label_ids.message}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -557,37 +467,112 @@ export default function DetailAndUpdateProductForm({
             <h3 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">
               Hình ảnh sản phẩm
             </h3>
-            {editingFields.gallery ? (
-              <ImageManyUploads
-                fieldName="gallery"
-                previews={galleryPreviews}
-                isDragging={isDraggingGallery}
-                setIsDragging={setIsDraggingGallery}
-                onFilesSelect={handleGalleryFilesSelect}
-                onRemove={handleRemoveGalleryItem}
-                fileInputRef={galleryInputRef}
-                label="Thư viện ảnh và video"
-                dragText="Kéo và thả hoặc nhấn để chọn ảnh hoặc video"
-              />
-            ) : product.gallery && product.gallery.length > 0 ? (
-              <div
-                className="grid grid-cols-3 gap-4 cursor-pointer"
-                onClick={() => handleFieldClick("gallery")}
-              >
-                {product.gallery.map((item, index) => (
-                  <div key={index} className="relative w-full h-24">
-                    <Image
-                      src={item.url}
-                      alt={item.name}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                      className="object-cover rounded"
-                    />
-                  </div>
-                ))}
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <Label
+                  htmlFor="thumbnail"
+                  className="text-gray-800 font-medium pb-2"
+                >
+                  Hình ảnh thumbnail <span className="text-red-600">*</span>
+                </Label>
+                {thumbnailPreview && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={toggleThumbnailEdit}
+                    className="px-4 py-1 text-sm"
+                  >
+                    {editingFields.thumbnail ? "Xem ảnh" : "Chỉnh sửa"}
+                  </Button>
+                )}
               </div>
-            ) : (
-              <div onClick={() => handleFieldClick("gallery")}>
+              {editingFields.thumbnail ? (
+                <ImageUpload
+                  fieldName="thumbnail"
+                  previewImage={thumbnailPreview}
+                  isDragging={isDraggingThumbnail}
+                  setIsDragging={setIsDraggingThumbnail}
+                  handleRemoveImage={handleRemoveThumbnail}
+                  fileInputRef={thumbnailInputRef}
+                  onImageSelect={handleThumbnailSelect}
+                  dragText="Kéo và thả hoặc nhấn để chọn hình ảnh thumbnail"
+                />
+              ) : thumbnailPreview ? (
+                <div
+                  className="relative w-24 h-24 cursor-pointer"
+                  onClick={() => handleFieldClick("thumbnail")}
+                >
+                  <Image
+                    src={thumbnailPreview}
+                    alt="Thumbnail"
+                    fill
+                    sizes="100vw"
+                    className="object-cover rounded"
+                  />
+                </div>
+              ) : (
+                <ImageUpload
+                  fieldName="thumbnail"
+                  previewImage={thumbnailPreview}
+                  isDragging={isDraggingThumbnail}
+                  setIsDragging={setIsDraggingThumbnail}
+                  handleRemoveImage={handleRemoveThumbnail}
+                  fileInputRef={thumbnailInputRef}
+                  onImageSelect={handleThumbnailSelect}
+                  dragText="Kéo và thả hoặc nhấn để chọn hình ảnh thumbnail"
+                />
+              )}
+            </div>
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <Label
+                  htmlFor="gallery"
+                  className="text-gray-800 font-medium pb-2"
+                >
+                  Thư viện ảnh và video <span className="text-red-600">*</span>
+                </Label>
+                {galleryPreviews.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={toggleGalleryEdit}
+                    className="px-4 py-1 text-sm"
+                  >
+                    {editingFields.gallery ? "Xem ảnh" : "Chỉnh sửa"}
+                  </Button>
+                )}
+              </div>
+              {editingFields.gallery ? (
+                <ImageManyUploads
+                  fieldName="gallery"
+                  previews={galleryPreviews}
+                  isDragging={isDraggingGallery}
+                  setIsDragging={setIsDraggingGallery}
+                  onFilesSelect={handleGalleryFilesSelect}
+                  onRemove={handleRemoveGalleryItem}
+                  fileInputRef={galleryInputRef}
+                  dragText="Kéo và thả hoặc nhấn để chọn ảnh hoặc video"
+                />
+              ) : galleryPreviews.length > 0 ? (
+                <div>
+                  <div
+                    className="grid grid-cols-3 gap-4 cursor-pointer"
+                    onClick={() => handleFieldClick("gallery")}
+                  >
+                    {galleryPreviews.map((item, index) => (
+                      <div key={index} className="relative w-full h-24">
+                        <Image
+                          src={item.url}
+                          alt={item.name}
+                          fill
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                          className="object-cover rounded"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
                 <ImageManyUploads
                   fieldName="gallery"
                   previews={galleryPreviews}
@@ -599,12 +584,12 @@ export default function DetailAndUpdateProductForm({
                   label="Thư viện ảnh và video"
                   dragText="Kéo và thả hoặc nhấn để chọn ảnh hoặc video"
                 />
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </CardContent>
 
-        {isAnyFieldEditing && (
+        {isDirty && (
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
             <Button
               type="button"

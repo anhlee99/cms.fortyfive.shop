@@ -1,7 +1,13 @@
+"use client";
+
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { IconChevronDown } from "@tabler/icons-react";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import type { Label } from "@/services/labels/label.type";
-import { useLabels as useLabelsMock } from "@/hooks/labels/useLabel";
+import { useLabels } from "@/hooks/labels/useLabel";
 
 interface LabelSelectProps {
   onValueChange: (value: string[]) => void;
@@ -10,7 +16,6 @@ interface LabelSelectProps {
   searchPlaceholder?: string;
   className?: string;
   disabled?: boolean;
-  labelPosition?: "top" | "bottom";
 }
 
 export function LabelSelect({
@@ -20,33 +25,26 @@ export function LabelSelect({
   searchPlaceholder = "Tìm kiếm...",
   className,
   disabled,
-  labelPosition = "top",
 }: LabelSelectProps) {
-  // use your real hook (useLabels) instead of useLabelsMock
-  const { data, isLoading } = useLabelsMock();
-
+  const { data, isLoading } = useLabels();
   const [searchTerm, setSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  // derive labels from data, update when data changes
   const labels: Label[] = useMemo(() => {
     return data?.data ?? [];
   }, [data]);
 
-  // filtered labels by searchTerm
   const filteredLabels = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
     if (!q) return labels;
     return labels.filter((l) => l.display_name.toLowerCase().includes(q));
   }, [labels, searchTerm]);
 
-  // open dropdown and focus input
   const open = () => {
     if (disabled) return;
     setIsOpen(true);
-    // focus after render
     setTimeout(() => inputRef.current?.focus(), 0);
   };
 
@@ -55,7 +53,6 @@ export function LabelSelect({
     setSearchTerm("");
   };
 
-  // click outside to close
   useEffect(() => {
     function handleDocClick(e: MouseEvent) {
       if (!containerRef.current) return;
@@ -70,7 +67,6 @@ export function LabelSelect({
     return () => document.removeEventListener("mousedown", handleDocClick);
   }, [isOpen]);
 
-  // toggle select/deselect label id (multi-select)
   const toggle = (id: string) => {
     const exists = (value || []).includes(id);
     const next = exists
@@ -79,7 +75,6 @@ export function LabelSelect({
     onValueChange(next);
   };
 
-  // keyboard handling: Esc closes, Backspace clears search when empty
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (!isOpen) return;
@@ -90,94 +85,104 @@ export function LabelSelect({
   }, [isOpen]);
 
   return (
-    <div className={cn("relative", className)} ref={containerRef}>
-      {labelPosition === "top" && placeholder && (
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          {placeholder}
-        </label>
-      )}
-
-      <button
-        type="button"
+    <div
+      className={cn("relative text-sm text-gray-800 min-w-[200px]", className)}
+      ref={containerRef}
+    >
+      <div
         className={cn(
-          "w-full text-left border rounded px-3 py-2 flex items-center justify-between",
-          disabled
-            ? "bg-gray-100 cursor-not-allowed"
-            : "bg-white hover:shadow-sm"
+          "flex flex-wrap items-center gap-2 px-3 py-2 cursor-text overflow-y-auto bg-white",
+          "rounded-md border border-gray-200 min-h-[44px] max-h-[150px]",
+          "focus-within:ring-2 focus-within:ring-orange-500 focus-within:border-orange-500 transition",
+          "shadow-sm",
+          disabled ? "bg-gray-100 cursor-not-allowed" : ""
         )}
         onClick={() => (isOpen ? close() : open())}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        disabled={disabled}
       >
-        <div className="flex flex-wrap gap-2 items-center">
-          {value && value.length > 0 ? (
-            // show selected labels
-            value
-              .map((id) => labels.find((l) => l.id === id))
-              .filter(Boolean)
-              .map((l) => (
-                <span
-                  key={l!.id}
-                  className="text-xs bg-gray-200 px-2 py-1 rounded"
-                  title={l!.display_name}
-                >
-                  {l!.display_name}
-                </span>
-              ))
-          ) : (
-            <span className="text-gray-400">{placeholder ?? "Chọn thẻ"}</span>
-          )}
-        </div>
-        <div className="ml-2 text-gray-500">▾</div>
-      </button>
+        {value.length === 0 && (
+          <span className="text-gray-500">{placeholder}</span>
+        )}
+        {value.map((id) => {
+          const label = labels.find((l) => l.id === id);
+          return label ? (
+            <div
+              key={id}
+              className="flex items-center px-2 py-1 rounded-md text-xs"
+              style={{
+                backgroundColor: label.extra_info?.color + "20",
+                color: label.extra_info?.color,
+              }}
+            >
+              {label.extra_info?.icon && (
+                <Image
+                  src={label.extra_info.icon}
+                  alt={`${label.display_name} icon`}
+                  width={16}
+                  height={16}
+                  className="mr-1 h-4 w-4"
+                  unoptimized
+                />
+              )}
+              {label.display_name}
+              <Button
+                type="button"
+                variant="default"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggle(id);
+                }}
+                className="ml-2 h-4 w-4 p-0"
+              >
+                ×
+              </Button>
+            </div>
+          ) : null;
+        })}
+        <IconChevronDown className="w-4 h-4 ml-auto text-gray-500" />
+      </div>
 
       {isOpen && (
-        <div
-          ref={inputRef as any}
-          className="absolute z-50 w-full mt-1 bg-white border rounded shadow-lg max-h-64 overflow-auto"
-        >
+        <div className="w-full absolute mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10">
           <div className="p-2">
-            <input
+            <Input
               ref={inputRef}
-              type="text"
+              placeholder={searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={searchPlaceholder}
-              className="w-full px-3 py-2 border rounded"
+              className="w-full mb-2"
             />
           </div>
-
-          <div>
+          <div className="max-h-60 pb-4 overflow-y-auto">
             {isLoading ? (
-              <div className="p-3 text-sm text-gray-500">Đang tải...</div>
+              <div className="px-3 py-2 text-gray-500">Đang tải...</div>
             ) : filteredLabels.length === 0 ? (
-              <div className="p-3 text-sm text-gray-500">
-                Không tìm thấy thẻ
-              </div>
+              <div className="px-3 py-2 text-gray-500">Không tìm thấy thẻ</div>
             ) : (
-              <ul role="listbox" aria-multiselectable className="divide-y">
-                {filteredLabels.map((label) => {
-                  const checked = (value || []).includes(label.id);
-                  return (
-                    <li
-                      key={label.id}
-                      className="flex items-center justify-between px-3 py-2 hover:bg-gray-50 cursor-pointer"
-                      onClick={() => toggle(label.id)}
-                    >
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => toggle(label.id)}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <span className="text-sm">{label.display_name}</span>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
+              filteredLabels.map((label) => (
+                <div
+                  key={label.id}
+                  className={cn(
+                    "flex items-center px-2 py-1 mx-2 my-1 rounded-md cursor-pointer hover:bg-gray-100",
+                    value.includes(label.id) && "bg-gray-100 font-medium"
+                  )}
+                  onClick={() => toggle(label.id)}
+                >
+                  {label.extra_info?.icon && (
+                    <Image
+                      src={label.extra_info.icon}
+                      alt={`${label.display_name} icon`}
+                      width={16}
+                      height={16}
+                      className="mr-1 h-4 w-4"
+                      unoptimized
+                    />
+                  )}
+                  <span>{label.display_name}</span>
+                </div>
+              ))
             )}
           </div>
         </div>

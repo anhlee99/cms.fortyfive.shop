@@ -15,6 +15,7 @@ import { Textarea } from "../ui/textarea";
 import { ImageManyUploads } from "../widgets/ImageManyUploads";
 import { LabelSelect } from "../labels/label-select";
 import { formatPrice } from "@/hooks/utils/formatPrice";
+import { ImageUpload } from "../widgets/ImageUpload";
 
 interface CreateProductFormProps {
   onCreate: (product: ProductCreateDTO) => void;
@@ -46,7 +47,7 @@ export default function CreateProductForm({
       thumbnail: "",
       gallery: [],
       import_price: 0,
-      vat: 0,
+      vat: undefined,
       sell_price: 0,
       label_ids: [],
     },
@@ -81,6 +82,9 @@ export default function CreateProductForm({
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const [isDraggingGallery, setIsDraggingGallery] = useState(false);
   const [galleryPreviews, setGalleryPreviews] = useState<GalleryItem[]>([]);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
+  const [isDraggingThumbnail, setIsDraggingThumbnail] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // watch values (stable references from react-hook-form)
@@ -140,6 +144,22 @@ export default function CreateProductForm({
     });
   };
 
+  const handleThumbnailSelect = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (reader.result) {
+        setThumbnailPreview(reader.result as string);
+        setValue("thumbnail", reader.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveThumbnail = () => {
+    setThumbnailPreview(null);
+    setValue("thumbnail", "");
+  };
+
   const handleRemoveGalleryItem = (index: number) => {
     const updatedGallery = galleryPreviews.filter((_, i) => i !== index);
     setGalleryPreviews(updatedGallery);
@@ -166,7 +186,7 @@ export default function CreateProductForm({
   };
 
   const handleCancel = () => {
-    onAttemptClose(isDirty); // Pass isDirty to parent
+    onAttemptClose(isDirty);
   };
 
   return (
@@ -250,7 +270,7 @@ export default function CreateProductForm({
                   id="description"
                   {...register("description")}
                   placeholder="Nhập mô tả chi tiết"
-                  className={`text-gray-800 border-gray-300 focus:ring-orange-500 focus:ring-2 ${
+                  className={`text-gray-800 h-[100px] border-gray-300 focus:ring-orange-500 focus:ring-2 ${
                     errors.description ? "border-red-500" : ""
                   }`}
                 />
@@ -290,6 +310,16 @@ export default function CreateProductForm({
                 >
                   Giá bán <span className="text-red-600">*</span>
                 </Label>
+                {sellPrice > 0 && importPrice > 0 && (
+                  <span
+                    className={`text-xs ml-1 ${
+                      Number(margin) > 0 ? "text-green-500" : "text-red-500"
+                    }`}
+                  >
+                    Tỷ lệ chênh: {margin}%
+                  </span>
+                )}
+
                 <Input
                   id="sell_price"
                   type="text"
@@ -305,11 +335,6 @@ export default function CreateProductForm({
                     {errors.sell_price.message}
                   </p>
                 )}
-                {sellPrice > 0 && importPrice > 0 && (
-                  <p className="text-gray-500 text-sm mt-1">
-                    Tỷ lệ chênh: {margin}%
-                  </p>
-                )}
               </div>
               <div>
                 <Label htmlFor="vat" className="text-gray-800 font-medium pb-2">
@@ -319,9 +344,10 @@ export default function CreateProductForm({
                   id="vat"
                   type="number"
                   step="0.01"
+                  min={0}
                   {...register("vat", { valueAsNumber: true })}
                   placeholder="Nhập VAT"
-                  className={`[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none text-gray-800 border-gray-300 focus:ring-orange-500 focus:ring-2 ${
+                  className={`[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none text-gray-800 h-11 border-gray-300 focus:ring-orange-500 focus:ring-2 ${
                     errors.vat ? "border-red-500" : ""
                   }`}
                 />
@@ -339,6 +365,7 @@ export default function CreateProductForm({
                   value={watch("label_ids")}
                   onValueChange={(value) => setValue("label_ids", value)}
                   placeholder="Chọn thẻ"
+                  className="w-full"
                 />
                 {errors.label_ids && (
                   <p className="text-red-500 text-sm mt-1">
@@ -353,6 +380,19 @@ export default function CreateProductForm({
             <h3 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">
               Hình ảnh sản phẩm
             </h3>
+            <div>
+              <ImageUpload
+                fieldName="thumbnail"
+                previewImage={thumbnailPreview}
+                isDragging={isDraggingThumbnail}
+                setIsDragging={setIsDraggingThumbnail}
+                handleRemoveImage={handleRemoveThumbnail}
+                fileInputRef={thumbnailInputRef}
+                onImageSelect={handleThumbnailSelect}
+                label="Hình ảnh thumbnail"
+                dragText="Kéo và thả hoặc nhấn để chọn hình ảnh thumbnail"
+              />
+            </div>
             <div>
               <ImageManyUploads
                 fieldName="gallery"
