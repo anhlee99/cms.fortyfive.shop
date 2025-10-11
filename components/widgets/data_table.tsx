@@ -109,7 +109,7 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="w-full">
+    <div className="@container/main w-full">
       <div className="flex items-center py-4 gap-2">
         {/* Left side — custom toolbar or default filter */}
         <div className="flex items-center gap-2 flex-1">

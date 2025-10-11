@@ -193,7 +193,7 @@ export default function CreateProductForm({
     <Card className="w-full bg-transparent border-0 shadow-none py-0 gap-0">
       <CardHeader className="bg-transparent p-0" />
       <form onSubmit={handleSubmit(onSubmit)}>
-        <CardContent className="space-y-8 pt-0 pb-5 max-h-[580px] overflow-y-auto">
+        <CardContent className="space-y-8 pt-0 pb-5 max-h-[70vh] overflow-y-auto">
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>

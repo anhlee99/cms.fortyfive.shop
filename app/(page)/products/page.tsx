@@ -16,6 +16,8 @@ import { Product } from "@/services/products/product.type";
 import DetailAndUpdateProductForm from "@/components/products/detail-update-product-form";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
+import ProductCard from "@/components/products/product-card";
 
 export default function Page() {
   const { data, isLoading, newProduct, updateProduct } = useProducts({
@@ -32,7 +34,8 @@ export default function Page() {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState<boolean>(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] =
     useState<boolean>(false);
-  const isFormDirtyRef = useRef<boolean>(false); // Track form dirty state
+  const isFormDirtyRef = useRef<boolean>(false);
+  const isMobile = useIsMobile();
 
   const handleRowClick = (product: Product) => {
     setSelectedProduct(product);
@@ -52,7 +55,6 @@ export default function Page() {
   const handleAttemptClose = (isDirty: boolean) => {
     isFormDirtyRef.current = isDirty;
     if (isDirty && !selectedProduct) {
-      // Only show dialog for create form with changes
       setIsConfirmDialogOpen(true);
     } else {
       setIsSidePanelOpen(false);
@@ -88,12 +90,20 @@ export default function Page() {
         onOpenChange={handleSidePanelOpenChange}
         open={isSidePanelOpen}
       >
-        <ProductsTable
-          data={data}
-          isLoading={isLoading}
-          onRowClick={handleRowClick}
-          onCreateClick={handleCreateClick}
-        />
+        {!isMobile ? (
+          <ProductsTable
+            data={data}
+            isLoading={isLoading}
+            onRowClick={handleRowClick}
+            onCreateClick={handleCreateClick}
+          />
+        ) : (
+          <ProductCard
+            data={data}
+            onRowClick={handleRowClick}
+            onCreateClick={handleCreateClick}
+          />
+        )}
 
         <SidePanelContent>
           <SidePanelHeader>
@@ -113,7 +123,6 @@ export default function Page() {
               onUpdate={(p) => {
                 updateProduct(selectedProduct.id, p)
                   .then(() => {
-                    // refetch or update local state if needed
                     console.log("Product updated:", p);
                     setSelectedProduct({ ...selectedProduct, ...p });
                   })
