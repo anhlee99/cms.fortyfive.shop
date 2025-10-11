@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { LabelSelect } from "../labels/label-select-2";
 import { useProductSearchUrl } from "@/hooks/products/useProductsSearch";
+import { ArrowUpDown } from "lucide-react";
 
 interface ProductCardProps {
   data?: PaginatedResponse<Product>;
@@ -41,6 +42,16 @@ export default function ProductCard({
   const [pageSize, setPageSize] = useState(data.pagination.pageSize);
   const { params, setParams } = useProductSearchUrl();
 
+  const [searchTerm, setSearchTerm] = useState(params.q || "");
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      setParams({ q: searchTerm, page: 1 });
+    }, 100);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm]);
+
   useEffect(() => {
     setProducts(data.data);
     setPage(data.pagination.page);
@@ -55,11 +66,24 @@ export default function ProductCard({
   const startIndex = (page - 1) * pageSize;
   const paginatedProducts = products.slice(startIndex, startIndex + pageSize);
 
+  const currentImportPriceSort = params.sort?.find(
+    (s) => s.field === "import_price"
+  )?.dir;
+
+  const currenSellPricetSort = params.sort?.find(
+    (s) => s.field === "sell_price"
+  )?.dir;
+
   return (
     <div className="p-4 space-y-6">
       <div className="flex items-center gap-2 w-full">
         <div className="space-y-4">
-          <Input placeholder="Tìm kiếm..." className="max-w-sm flex-1 h-11" />
+          <Input
+            placeholder="Tìm kiếm..."
+            className="max-w-sm flex-1 h-11"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
           <LabelSelect
             value={
               params.filters?.find((f) => f.field === "labels")?.value
@@ -88,8 +112,39 @@ export default function ProductCard({
             }}
             placeholder="Tìm kiếm theo thẻ"
           />
+          <div className="flex space-x-4">
+            {" "}
+            <Button
+              variant="outline"
+              onClick={() => {
+                const newDir =
+                  currentImportPriceSort === "asc" ? "desc" : "asc";
+                setParams({
+                  sort: [{ field: "import_price", dir: newDir }],
+                  page: 1,
+                });
+              }}
+            >
+              Giá nhập
+              <ArrowUpDown />
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                const newDir = currenSellPricetSort === "asc" ? "desc" : "asc";
+                setParams({
+                  sort: [{ field: "sell_price", dir: newDir }],
+                  page: 1,
+                });
+              }}
+            >
+              Giá bán
+              <ArrowUpDown />
+            </Button>
+          </div>
         </div>
-        <Button className="ml-auto" onClick={onCreateClick}>
+
+        <Button className="ml-auto mt-auto" onClick={onCreateClick}>
           Tạo sản phẩm
         </Button>
       </div>
