@@ -25,6 +25,7 @@ export interface GalleryItem {
 }
 
 export type ProductCreateDTO = {
+  agent_id?: string;
   product_code: string;
   name: string;
   short_description: string;

@@ -17,6 +17,7 @@ export interface Label {
 }
 
 export interface CreateLabelDTO {
+  agent_id: string;
   display_name: string;
   description?: string;
   type: LabelType;

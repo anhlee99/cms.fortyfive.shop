@@ -1,6 +1,20 @@
-import type { Order, OrderCreateDTO, OrderSearchParams, OrderUpdateDTO, OrderStatus, OrderStatusCreateDTO} from "./orders.type";
+import type {
+  Order,
+  OrderCreateDTO,
+  OrderSearchParams,
+  OrderUpdateDTO,
+  OrderStatus,
+  OrderStatusCreateDTO,
+} from "./orders.type";
 import { createClient } from "@/lib/supabase/server";
-import { PaginatedResponse, OP_MAP, FilterOption, FilterOperator, FilterNotOperator } from "@/types/pagination";
+import {
+  PaginatedResponse,
+  OP_MAP,
+  FilterOption,
+  FilterOperator,
+  FilterNotOperator,
+} from "@/types/pagination";
+import { User } from "../auth/auth.type";
 
 type Buckets = {
   labelFilters: FilterOption[];
@@ -22,7 +36,8 @@ function bucketize(filters: FilterOption[] = []): Buckets {
   for (const f of filters) {
     const op = (f.operator ?? "eq") as FilterOperator;
     if (f.field === "labels") B.labelFilters.push(f);
-    else if (op === "fts" || op === "plfts" || op === "phfts") B.ftsFilters.push(f);
+    else if (op === "fts" || op === "plfts" || op === "phfts")
+      B.ftsFilters.push(f);
     // else if (op === "cs" || op === "cd" || op === "ov") B.jsonArrayFilters.push(f);
     else if (f.notOp) B.notFilters.push(f);
     else B.baseFilters.push(f);
@@ -33,7 +48,10 @@ function bucketize(filters: FilterOption[] = []): Buckets {
 function normalizeValue(val: any, op?: FilterOperator | FilterNotOperator) {
   if (op === "in") {
     if (Array.isArray(val)) return val;
-    return String(val).split(",").map(s => s.trim()).filter(Boolean);
+    return String(val)
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
   }
   if (op === "is") {
     if (val === "null" || val === null) return null;
@@ -41,17 +59,20 @@ function normalizeValue(val: any, op?: FilterOperator | FilterNotOperator) {
     if (val === "false") return false;
   }
   // cố gắng parse number
-  if (typeof val === "string" && /^-?\d+(\.\d+)?$/.test(val)) return Number(val);
+  if (typeof val === "string" && /^-?\d+(\.\d+)?$/.test(val))
+    return Number(val);
   // cố gắng parse JSON array/object nếu trông giống
   if (typeof val === "string" && /^[\[\{].*[\]\}]$/.test(val)) {
-    try { return JSON.parse(val); } catch {}
+    try {
+      return JSON.parse(val);
+    } catch {}
   }
   return val;
 }
 
 function applyFilter(q: any, f: FilterOption) {
   const op = (f.operator ?? "eq") as keyof typeof OP_MAP;
-  const v  = normalizeValue(f.value, op);
+  const v = normalizeValue(f.value, op);
 
   // operator chính
   const handler = (OP_MAP as any)[op];
@@ -65,12 +86,16 @@ function applyFilter(q: any, f: FilterOption) {
   return q;
 }
 
-export async function list(params: OrderSearchParams): Promise<PaginatedResponse<Order>> {
+export async function list(
+  user: User,
+  params: OrderSearchParams
+): Promise<PaginatedResponse<Order>> {
   const supabase = await createClient();
   const B = bucketize(params.filters);
 
   const page = params.page && params.page > 0 ? params.page : 1;
-  const limit = params.limit && params.limit > 0 && params.limit <= 100 ? params.limit : 20;
+  const limit =
+    params.limit && params.limit > 0 && params.limit <= 100 ? params.limit : 20;
   const offset = (page - 1) * limit;
 
   // SELECT string: LEFT by default
@@ -86,10 +111,13 @@ export async function list(params: OrderSearchParams): Promise<PaginatedResponse
   `;
 
   // Chọn LEFT hay INNER tuỳ có label filter
-  let q = supabase.from("orders").select(
-    B.labelFilters.length ? selectInner : selectLeft,
-    { count: "exact" }
-  ).is("deleted_at", null); // chỉ lấy những đơn hàng chưa bị xoá
+  let q = supabase
+    .from("orders")
+    .select(B.labelFilters.length ? selectInner : selectLeft, {
+      count: "exact",
+    })
+    .eq("agent_id", user.agentId)
+    .is("deleted_at", null); // chỉ lấy những đơn hàng chưa bị xoá
 
   // 3.1) labelFilters: ánh xạ sang bảng join
   for (const f of B.labelFilters) {
@@ -99,7 +127,11 @@ export async function list(params: OrderSearchParams): Promise<PaginatedResponse
     if (op === "in") {
       q = q.in("orders_labels.label_id", Array.isArray(v) ? v : [String(v)]);
     } else if (f.notOp) {
-      q = q.not("orders_labels.label_id", f.notOp as any, normalizeValue(f.value, f.notOp));
+      q = q.not(
+        "orders_labels.label_id",
+        f.notOp as any,
+        normalizeValue(f.value, f.notOp)
+      );
     } else {
       q = q.eq("orders_labels.label_id", v);
     }
@@ -120,7 +152,7 @@ export async function list(params: OrderSearchParams): Promise<PaginatedResponse
     q = applyFilter(q, f);
   }
 
-   // 3.5) not-only filters (nếu bạn muốn xử lý riêng các filter chỉ có notOp, không có operator)
+  // 3.5) not-only filters (nếu bạn muốn xử lý riêng các filter chỉ có notOp, không có operator)
   for (const f of B.notFilters) {
     if (!f.operator) {
       const notV = normalizeValue(f.value, f.notOp);
@@ -128,8 +160,7 @@ export async function list(params: OrderSearchParams): Promise<PaginatedResponse
     }
   }
 
-
-    // basic text search
+  // basic text search
   if (params.q && params.q.trim()) {
     const search = params.q.trim();
     q = q.ilike("order_code", `%${search}%`);
@@ -139,10 +170,9 @@ export async function list(params: OrderSearchParams): Promise<PaginatedResponse
     q = q.eq("order_status_id", params.order_status_id);
   }
 
-
   // sorting
   if (params.sort && params.sort.length > 0) {
-    params.sort.forEach(s => {
+    params.sort.forEach((s) => {
       if (s.field) {
         q = q.order(s.field, { ascending: s.dir === "asc" });
       }
@@ -151,11 +181,11 @@ export async function list(params: OrderSearchParams): Promise<PaginatedResponse
 
   const { data, error, count } = await q.range(offset, offset + limit - 1);
   if (error) throw error;
-  
+
   return {
     data: data.map((item: any) => ({
       ...item,
-      labels: item.labels ?? []
+      labels: item.labels ?? [],
     })) as Order[],
     pagination: {
       page,
@@ -163,102 +193,120 @@ export async function list(params: OrderSearchParams): Promise<PaginatedResponse
       totalItems: count ?? 0,
       totalPages: Math.ceil((count ?? 0) / limit),
     },
-  }
+  };
 }
 
-export async function create(input: OrderCreateDTO & {user_id: string}): Promise<Order> {
-    const supabase = await createClient();
-    const { data, error } = await supabase.rpc("create_order", { p_order: input});
-    if (error) throw error;
-    return data as Order;
+export async function create(input: OrderCreateDTO): Promise<Order> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("create_order", {
+    p_order: input,
+  });
+  if (error) throw error;
+  return data as Order;
 }
 
 export async function update(input: Partial<OrderUpdateDTO>): Promise<Order> {
-    const supabase = await createClient();
-    // sử dụng RPC để gọi hàm cập nhật
-    const { data, error } = await supabase.rpc("update_order", { p_order: input });
-    if (error) throw error;
-    return data as Order;
+  const supabase = await createClient();
+  // sử dụng RPC để gọi hàm cập nhật
+  const { data, error } = await supabase.rpc("update_order", {
+    p_order: input,
+  });
+  if (error) throw error;
+  return data as Order;
 }
 
 export async function del(id: string): Promise<void> {
-    const supabase = await createClient();
+  const supabase = await createClient();
 
-    // Thực hiện xoá mềm (soft delete) bằng cách cập nhật trường deleted_at
-    // khi đơn hàng được tạo không quá 45 ngày
-    const nowIso = new Date().toISOString();
-    const cutoffIso = new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString();
+  // Thực hiện xoá mềm (soft delete) bằng cách cập nhật trường deleted_at
+  // khi đơn hàng được tạo không quá 45 ngày
+  const nowIso = new Date().toISOString();
+  const cutoffIso = new Date(
+    Date.now() - 45 * 24 * 60 * 60 * 1000
+  ).toISOString();
 
-    const { data, error } = await supabase
-        .from("orders")
-        .update({ deleted_at: nowIso })
-        .eq("id", id)
-        .is("deleted_at", null)    // chưa bị xóa
-        .gte("created_at", cutoffIso)
-        .select("id, deleted_at");  // cần select để nhận về error nếu không có hàng nào bị ảnh hưởng
-    
-    if (error) throw error;
-    if (!data || data.length === 0) {
-        throw new Error("Order not found or cannot be deleted (older than 45 days)");
-    }
-    return;
+  const { data, error } = await supabase
+    .from("orders")
+    .update({ deleted_at: nowIso })
+    .eq("id", id)
+    .is("deleted_at", null) // chưa bị xóa
+    .gte("created_at", cutoffIso)
+    .select("id, deleted_at"); // cần select để nhận về error nếu không có hàng nào bị ảnh hưởng
+
+  if (error) throw error;
+  if (!data || data.length === 0) {
+    throw new Error(
+      "Order not found or cannot be deleted (older than 45 days)"
+    );
+  }
+  return;
 }
 
 export async function getById(id: string): Promise<Order | null> {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from("orders")
-        .select(`
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("orders")
+    .select(
+      `
           *, 
           orders_products(*), 
           customers:customer_id(*), 
           orders_labels(label_id, labels(*)),
           orders_status:order_status_id(*)
-        `)
-        .eq("id", id)
-        .is("deleted_at", null)
-        .single();
-        
-    if (error) throw error;
-    return data as Order;
+        `
+    )
+    .eq("id", id)
+    .is("deleted_at", null)
+    .single();
+
+  if (error) throw error;
+  return data as Order;
 }
 
-export async function addLabel(orderId: string, labelId: string): Promise<void> {
-    const supabase = await createClient();
-    const { error } = await supabase
-        .from("orders_labels")
-        .upsert(
-          { order_id: orderId, label_id: labelId },
-          { onConflict: 'order_id,label_id', ignoreDuplicates: true }
-        );
-    if (error) throw error;
+export async function addLabel(
+  orderId: string,
+  labelId: string
+): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("orders_labels")
+    .upsert(
+      { order_id: orderId, label_id: labelId },
+      { onConflict: "order_id,label_id", ignoreDuplicates: true }
+    );
+  if (error) throw error;
 }
 
-export async function removeLabel(orderId: string, labelId: string): Promise<void> {
-    const supabase = await createClient();
-    const { error } = await supabase
-        .from("orders_labels")
-        .delete()
-        .eq("order_id", orderId)
-        .eq("label_id", labelId);
-        
-    if (error) throw error;
+export async function removeLabel(
+  orderId: string,
+  labelId: string
+): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("orders_labels")
+    .delete()
+    .eq("order_id", orderId)
+    .eq("label_id", labelId);
+
+  if (error) throw error;
 }
 
 // orders-status
 export async function listOrderStatuses(): Promise<OrderStatus[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
-      .from("orders_status")
-      .select("*")
-      .is("deleted_at", null)
-      .order("index", { ascending: true });
-      
+    .from("orders_status")
+    .select("*")
+    .is("deleted_at", null)
+    .order("index", { ascending: true });
+
   if (error) throw error;
   return data as OrderStatus[];
 }
 
-export async function createOrUpdateOrderStatus(input: OrderStatusCreateDTO): Promise<OrderStatus> {
+export async function createOrUpdateOrderStatus(
+  input: OrderStatusCreateDTO
+): Promise<OrderStatus> {
   const supabase = await createClient();
   let res;
   if (input.id) {
@@ -271,13 +319,9 @@ export async function createOrUpdateOrderStatus(input: OrderStatusCreateDTO): Pr
       .single();
   } else {
     // tạo mới
-    res = await supabase
-      .from("orders_status")
-      .insert(input)
-      .select()
-      .single();
+    res = await supabase.from("orders_status").insert(input).select().single();
   }
-  
+
   if (res.error) throw res.error;
   return res.data as OrderStatus;
 }
@@ -285,9 +329,9 @@ export async function createOrUpdateOrderStatus(input: OrderStatusCreateDTO): Pr
 export async function deleteOrderStatus(id: string): Promise<void> {
   const supabase = await createClient();
   const { error } = await supabase
-      .from("orders_status")
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("id", id);
-      
+    .from("orders_status")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", id);
+
   if (error) throw error;
 }
