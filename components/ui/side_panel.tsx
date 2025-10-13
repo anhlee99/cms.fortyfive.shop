@@ -70,7 +70,7 @@ function SidePanelContent({
         {...props}
       >
         <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-          <ResizablePanel defaultSize={75} minSize={25} maxSize={90}>
+          <ResizablePanel defaultSize={80} minSize={25} maxSize={90}>
             <div className="h-full w-full" />
           </ResizablePanel>
 
@@ -79,7 +79,7 @@ function SidePanelContent({
             className="cursor-col-resize bg-border hover:bg-primary/50 transition-colors"
           />
 
-          <ResizablePanel defaultSize={70} minSize={25} maxSize={90}>
+          <ResizablePanel defaultSize={80} minSize={25} maxSize={90}>
             <div
               className={cn(
                 "relative h-full bg-background p-6 border-l shadow-lg",

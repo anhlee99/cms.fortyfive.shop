@@ -16,7 +16,7 @@ interface ImageUploadProps {
   handleRemoveImage: () => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   onImageSelect: (file: File) => void;
-  label: string;
+  label?: string;
   dragText?: string;
 }
 
@@ -54,8 +54,8 @@ export function ImageUpload({
         });
         return;
       }
-      if (file.size > 1 * 1024 * 1024) {
-        toast.error("Hình ảnh không được vượt quá 1MB.", { duration: 3000 });
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("Hình ảnh không được vượt quá 10MB.", { duration: 3000 });
         return;
       }
       onImageSelect(file);
@@ -140,7 +140,7 @@ export function ImageUpload({
               {isDragging ? "Thả hình ảnh vào đây" : dragText}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              (Hỗ trợ JPG, PNG, tối đa 1MB)
+              (Hỗ trợ JPG, PNG, tối đa 10MB)
             </p>
           </motion.div>
         )}

@@ -5,6 +5,7 @@ import { Database } from "./database.types";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY!;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 /**
  * Especially important if using Fluid compute: Don't put this client in a
@@ -12,16 +13,13 @@ const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY!;
  * it.
  */
 
-
 function getAccessToken(headers: Headers) {
-  const authHeader = headers.get("authorization") || headers.get("Authorization");
-  return (
-    authHeader && authHeader.toLowerCase().startsWith("bearer ")
-      ? authHeader.slice(7)
-      : null
-  );
+  const authHeader =
+    headers.get("authorization") || headers.get("Authorization");
+  return authHeader && authHeader.toLowerCase().startsWith("bearer ")
+    ? authHeader.slice(7)
+    : null;
 }
-
 
 export async function createClient(initToken?: string) {
   // 1) Try Bearer token first (API/mobile/watch friendly)
@@ -32,47 +30,55 @@ export async function createClient(initToken?: string) {
   }
   if (accessToken) {
     return createSupabaseClient<Database>(SUPABASE_URL, SUPABASE_ANON, {
-        global: {
-           headers: { Authorization: `Bearer ${accessToken}` },
-          //  fetch: debugFetch("supabase"),
-        },
-        auth: { persistSession: false, autoRefreshToken: false },
-
+      global: {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        //  fetch: debugFetch("supabase"),
+      },
+      auth: { persistSession: false, autoRefreshToken: false },
     });
   }
 
   // 2) Fallback to cookies (SSR/RSC pages)
   const cookieStore = await cookies();
 
-  return createServerClient(
-    SUPABASE_URL,
-    SUPABASE_ANON,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
-            );
-          } catch {
-            // The `setAll` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-          }
-        },
+  return createServerClient(SUPABASE_URL, SUPABASE_ANON, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        } catch {
+          // The `setAll` method was called from a Server Component.
+          // This can be ignored if you have middleware refreshing
+          // user sessions.
+        }
       },
     },
-  );
+  });
 }
 
+export async function createAdminClient() {
+  return createSupabaseClient<Database>(
+    SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY,
+    {
+      auth: { persistSession: false, autoRefreshToken: false },
+      // global: { fetch: debugFetch("supabase-admin") },
+    }
+  );
+}
 
 export function debugFetch(tag = "supabase") {
   return async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === "string" ? input : (input as Request).url;
-    const method = init?.method ?? (typeof input !== "string" && (input as Request).method) ?? "GET";
+    const method =
+      init?.method ??
+      (typeof input !== "string" && (input as Request).method) ??
+      "GET";
     const body =
       init?.body && typeof init.body !== "string"
         ? JSON.stringify(init.body)
@@ -85,10 +91,14 @@ export function debugFetch(tag = "supabase") {
 
     const clone = res.clone();
     let text = "";
-    try { text = await clone.text(); } catch {}
+    try {
+      text = await clone.text();
+    } catch {}
     console.log(
       `[${tag}] ← ${res.status}`,
-      res.headers.get("content-range") ? `content-range=${res.headers.get("content-range")}` : "",
+      res.headers.get("content-range")
+        ? `content-range=${res.headers.get("content-range")}`
+        : "",
       text.slice(0, 800) // keep short
     );
 

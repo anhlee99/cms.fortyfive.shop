@@ -50,6 +50,7 @@ interface DataTableProps<TData, TValue> {
   totalPages: number;
   totalVendor: number;
   loading: boolean;
+  onRowClick?: (row: TData) => void;
   customToolbar?: (
     table: ReturnType<typeof useReactTable<TData>>
   ) => React.ReactNode;
@@ -66,6 +67,7 @@ export function DataTable<TData, TValue>({
   totalPages,
   totalVendor,
   loading,
+  onRowClick,
   customToolbar,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -107,7 +109,7 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="w-full">
+    <div className="@container/main w-full">
       <div className="flex items-center py-4 gap-2">
         {/* Left side — custom toolbar or default filter */}
         <div className="flex items-center gap-2 flex-1">
@@ -170,6 +172,8 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  onClick={() => onRowClick && onRowClick(row.original)}
+                  className="cursor-pointer"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

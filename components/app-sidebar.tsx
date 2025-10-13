@@ -24,7 +24,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { User } from "@/types/user";
+import { User } from "@/services/auth/auth.type";
 import { usePathname } from "next/navigation";
 import { NavItem } from "@/components/nav-main";
 // This is sample data.
