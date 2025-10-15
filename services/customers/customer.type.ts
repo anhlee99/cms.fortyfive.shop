@@ -1,26 +1,27 @@
 import { SearchParams } from "@/types/pagination";
 
 export type Customer = {
-    id: string;
-    user_id: string;
-    name: string;
-    email: string;
-    phone: string;
-    address: string;
-    birthday: string;
-}
+  id: string;
+  user_id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  birthday: string;
+};
 
 export type CustomerCreateDTO = {
-    user_id: string;
-    name: string;
-    email: string;
-    phone?: string;
-    address?: string;
-    birthday?: string;
-}
+  user_id: string;
+  agent_id?: string;
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  birthday?: string;
+};
 
 export type CustomerUpdateDTO = Partial<CustomerCreateDTO> & {
-    id: string;
-}
+  id: string;
+};
 
 export interface CustomerSearchParams extends SearchParams {}

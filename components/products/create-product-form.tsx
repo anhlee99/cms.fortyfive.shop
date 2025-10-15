@@ -61,12 +61,12 @@ export default function CreateProductForm({
         errors.product_code = { message: "Mã sản phẩm không được để trống." };
       if (!data.name.trim())
         errors.name = { message: "Tên sản phẩm không được để trống." };
-      if (!data.short_description.trim())
-        errors.short_description = {
-          message: "Mô tả ngắn không được để trống.",
-        };
-      if (!data.description.trim())
-        errors.description = { message: "Mô tả chi tiết không được để trống." };
+      // if (!data.short_description.trim())
+      //   errors.short_description = {
+      //     message: "Mô tả ngắn không được để trống.",
+      //   };
+      // if (!data.description.trim())
+      //   errors.description = { message: "Mô tả chi tiết không được để trống." };
       if (isNaN(data.import_price) || data.import_price <= 0)
         errors.import_price = { message: "Giá nhập phải là số hợp lệ." };
       if (isNaN(data.vat) || data.vat < 0 || data.vat > 100)
@@ -256,7 +256,8 @@ export default function CreateProductForm({
                   htmlFor="short_description"
                   className="text-gray-800 font-medium pb-2"
                 >
-                  Mô tả ngắn <span className="text-red-600">*</span>
+                  Mô tả ngắn
+                  {/* <span className="text-red-600">*</span> */}
                 </Label>
                 <Textarea
                   id="short_description"
@@ -277,7 +278,8 @@ export default function CreateProductForm({
                   htmlFor="description"
                   className="text-gray-800 font-medium pb-2"
                 >
-                  Mô tả chi tiết <span className="text-red-600">*</span>
+                  Mô tả chi tiết
+                  {/* <span className="text-red-600">*</span> */}
                 </Label>
                 <Textarea
                   id="description"
@@ -372,7 +374,8 @@ export default function CreateProductForm({
               </div>
               <div>
                 <Label htmlFor="vat" className="text-gray-800 font-medium pb-2">
-                  Thẻ <span className="text-red-600">*</span>
+                  Thẻ
+                  {/* <span className="text-red-600">*</span> */}
                 </Label>
                 <LabelSelect
                   value={watch("label_ids")}

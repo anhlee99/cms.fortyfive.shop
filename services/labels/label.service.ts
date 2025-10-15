@@ -6,8 +6,10 @@ import type {
 } from "./label.type";
 import { createClient } from "@/lib/supabase/server";
 import { PaginatedResponse } from "@/types/pagination";
+import { User } from "../auth/auth.type";
 
 export async function list(
+  user: User,
   params: LabelSearchParams
 ): Promise<PaginatedResponse<Label>> {
   const supabase = await createClient();
@@ -17,7 +19,10 @@ export async function list(
     params.limit && params.limit > 0 && params.limit <= 100 ? params.limit : 20;
   const offset = (page - 1) * limit;
 
-  let query = supabase.from("labels").select("*", { count: "exact" }); // returns { data, count }
+  let query = supabase
+    .from("labels")
+    .select("*", { count: "exact" }) // returns { data, count }
+    .eq("agent_id", user.agentId);
 
   // sorting
   if (params.sort && params.sort.length > 0) {
@@ -55,11 +60,16 @@ export async function list(
 }
 
 export async function listAllLabelsByType(
+  user: User,
   labelType: LabelType
 ): Promise<Label[]> {
   const supabase = await createClient();
 
-  let query = supabase.from("labels").select("*").eq("type", labelType);
+  let query = supabase
+    .from("labels")
+    .select("*")
+    .eq("type", labelType)
+    .eq("agent_id", user.agentId);
 
   const { data, error } = await query;
   if (error) throw error;

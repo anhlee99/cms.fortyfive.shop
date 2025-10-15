@@ -329,7 +329,8 @@ export default function DetailAndUpdateProductForm({
                   htmlFor="short_description"
                   className="text-gray-800 font-medium pb-2"
                 >
-                  Mô tả ngắn <span className="text-red-600">*</span>
+                  Mô tả ngắn
+                  {/* <span className="text-red-600">*</span> */}
                 </Label>
                 <Textarea
                   id="short_description"
@@ -350,7 +351,8 @@ export default function DetailAndUpdateProductForm({
                   htmlFor="description"
                   className="text-gray-800 font-medium pb-2"
                 >
-                  Mô tả chi tiết <span className="text-red-600">*</span>
+                  Mô tả chi tiết
+                  {/* <span className="text-red-600">*</span> */}
                 </Label>
                 <Textarea
                   id="description"
@@ -447,7 +449,8 @@ export default function DetailAndUpdateProductForm({
                   htmlFor="label_ids"
                   className="text-gray-800 font-medium pb-2"
                 >
-                  Thẻ <span className="text-red-600">*</span>
+                  Thẻ
+                  {/* <span className="text-red-600">*</span> */}
                 </Label>
                 <LabelSelect
                   value={watch("label_ids")}
@@ -473,7 +476,8 @@ export default function DetailAndUpdateProductForm({
                   htmlFor="thumbnail"
                   className="text-gray-800 font-medium pb-2"
                 >
-                  Hình ảnh thumbnail <span className="text-red-600">*</span>
+                  Hình ảnh thumbnail
+                  {/* <span className="text-red-600">*</span> */}
                 </Label>
                 {thumbnailPreview && (
                   <Button
@@ -529,7 +533,8 @@ export default function DetailAndUpdateProductForm({
                   htmlFor="gallery"
                   className="text-gray-800 font-medium pb-2"
                 >
-                  Thư viện ảnh và video <span className="text-red-600">*</span>
+                  Thư viện ảnh và video
+                  {/* <span className="text-red-600">*</span> */}
                 </Label>
                 {galleryPreviews.length > 0 && (
                   <Button

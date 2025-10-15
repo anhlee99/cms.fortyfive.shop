@@ -17,6 +17,7 @@ export default function ShopCreate() {
     setLoading(true);
     try {
       await newShop({
+        agent_id: "",
         name,
         status: "active",
       });

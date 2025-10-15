@@ -12,6 +12,7 @@ import {
   FilterOperator,
   FilterNotOperator,
 } from "@/types/pagination";
+import { User } from "../auth/auth.type";
 
 type Buckets = {
   labelFilters: FilterOption[];
@@ -84,6 +85,7 @@ function applyFilter(q: any, f: FilterOption) {
 }
 
 export async function list(
+  user: User,
   params: ProductSearchParams
 ): Promise<PaginatedResponse<Product>> {
   const supabase = await createClient();
@@ -111,7 +113,9 @@ export async function list(
     .from("products")
     .select(B.labelFilters.length ? selectInner : selectLeft, {
       count: "exact",
-    });
+    })
+    .eq("agent_id", user.agentId)
+    .is("deleted_at", null);
 
   // 3.1) labelFilters: ánh xạ sang bảng join
   for (const f of B.labelFilters) {
