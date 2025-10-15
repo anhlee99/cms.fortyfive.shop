@@ -16,6 +16,8 @@ import { ImageManyUploads } from "../widgets/ImageManyUploads";
 import { LabelSelect } from "../labels/label-select";
 import { formatPrice } from "@/hooks/utils/formatPrice";
 import { ImageUpload } from "../widgets/ImageUpload";
+import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CreateProductFormProps {
   onCreate: (product: ProductCreateDTO) => void;
@@ -23,6 +25,7 @@ interface CreateProductFormProps {
   onSuccess?: (message: string) => void;
   onError?: (message: string) => void;
   onAttemptClose: (isDirty: boolean) => void;
+  setFormDirty: (isDirty: boolean) => void;
 }
 
 export default function CreateProductForm({
@@ -31,6 +34,7 @@ export default function CreateProductForm({
   onSuccess,
   onError,
   onAttemptClose,
+  setFormDirty,
 }: CreateProductFormProps) {
   const {
     register,
@@ -71,13 +75,16 @@ export default function CreateProductForm({
         errors.sell_price = { message: "Giá bán phải là số hợp lệ." };
       if (data.label_ids.length === 0)
         errors.label_ids = { message: "Vui lòng chọn ít nhất một thẻ." };
-      const hasErrors = Object.keys(errors).length > 0;
+
       return {
-        values: hasErrors ? {} : data,
+        values: data,
         errors,
       };
     },
   });
+  useEffect(() => {
+    setFormDirty(isDirty);
+  }, [isDirty, setFormDirty]);
 
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const [isDraggingGallery, setIsDraggingGallery] = useState(false);
@@ -86,6 +93,7 @@ export default function CreateProductForm({
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const [isDraggingThumbnail, setIsDraggingThumbnail] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const isMobile = useIsMobile();
 
   // watch values (stable references from react-hook-form)
   const sellPrice = watch("sell_price");
@@ -193,7 +201,12 @@ export default function CreateProductForm({
     <Card className="w-full bg-transparent border-0 shadow-none py-0 gap-0">
       <CardHeader className="bg-transparent p-0" />
       <form onSubmit={handleSubmit(onSubmit)}>
-        <CardContent className="space-y-8 pt-0 pb-5 max-h-[70vh] overflow-y-auto">
+        <CardContent
+          className={cn(
+            "space-y-8 pt-0 pb-5 overflow-y-auto",
+            isMobile ? "max-h-[75vh]" : "max-h-[70vh]"
+          )}
+        >
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
