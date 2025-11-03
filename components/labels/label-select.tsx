@@ -54,7 +54,11 @@ export function LabelSelect({
   }, []);
 
   const handleSelect = (labelId: string) => {
-    if (!value.includes(labelId)) {
+    // Nếu thẻ đã được chọn (tồn tại trong value), thì bỏ chọn
+    if (value.includes(labelId)) {
+      onValueChange(value.filter((id) => id !== labelId));
+    } else {
+      // Nếu chưa được chọn, thì thêm vào (chọn)
       onValueChange([...value, labelId]);
     }
     setSearchTerm("");
@@ -77,10 +81,10 @@ export function LabelSelect({
         )}
         onClick={() => {
           if (!disabled) {
-            if (isOpen) {
-              setIsOpen(false);
-            } else {
-              setIsOpen(true);
+            // Đơn giản hóa thành toggle
+            setIsOpen((prev) => !prev);
+            // Focus vào input sau khi toggle mở
+            if (!isOpen) {
               setTimeout(() => inputRef.current?.focus(), 0);
             }
           }
@@ -94,7 +98,8 @@ export function LabelSelect({
           return label ? (
             <div
               key={id}
-              className="flex items-center px-2 py-1 rounded-md text-xs"
+              // className="flex items-center px-2 py-1 rounded-md text-xs"
+              className="flex items-center px-2 py-1 rounded-md text-xs font-semibold border border-gray-300"
               style={{
                 backgroundColor: label.extra_info?.color + "20",
                 color: label.extra_info?.color,
@@ -133,7 +138,8 @@ export function LabelSelect({
       {isOpen && (
         <div
           ref={dropdownRef}
-          className="w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10"
+          // className="w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10"
+          className="w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 absolute left-0 right-0 top-full"
         >
           <div className="p-2">
             <Input
@@ -151,7 +157,8 @@ export function LabelSelect({
                   key={label.id}
                   className={cn(
                     "flex items-center px-2 py-1 mx-2 my-1 rounded-md cursor-pointer hover:bg-gray-100",
-                    value.includes(label.id) && "bg-gray-100 font-medium"
+                    value.includes(label.id) &&
+                      "bg-gray-100 font-medium border border-gray-500"
                   )}
                   onClick={() => handleSelect(label.id)}
                 >

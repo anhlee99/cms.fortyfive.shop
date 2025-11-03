@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { IconLoader } from "@tabler/icons-react";
 import {
-  ProductCreateDTO,
-  GalleryItem,
+  Product,
+  ProductFormType,
+  GalleryItemFile,
 } from "@/services/products/product.type";
 import { Textarea } from "../ui/textarea";
 import { ImageManyUploads } from "../widgets/ImageManyUploads";
@@ -18,14 +19,20 @@ import { formatPrice } from "@/hooks/utils/formatPrice";
 import { ImageUpload } from "../widgets/ImageUpload";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "sonner";
 
 interface CreateProductFormProps {
-  onCreate: (product: ProductCreateDTO) => void;
+  onCreate: (product: ProductFormType) => Promise<Product>;
   onClose: () => void;
   onSuccess?: (message: string) => void;
   onError?: (message: string) => void;
   onAttemptClose: (isDirty: boolean) => void;
   setFormDirty: (isDirty: boolean) => void;
+}
+
+export default interface ProductPayloadFile {
+  thumbnail: File | null;
+  gallery: File[] | null;
 }
 
 export default function CreateProductForm({
@@ -41,15 +48,16 @@ export default function CreateProductForm({
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: { errors, isDirty },
-  } = useForm<ProductCreateDTO>({
+  } = useForm<ProductFormType>({
     defaultValues: {
       product_code: "",
       name: "",
       short_description: "",
       description: "",
-      thumbnail: "",
-      gallery: [],
+      thumbnail: null,
+      gallery: null,
       import_price: 0,
       vat: undefined,
       sell_price: 0,
@@ -67,14 +75,14 @@ export default function CreateProductForm({
       //   };
       // if (!data.description.trim())
       //   errors.description = { message: "Mô tả chi tiết không được để trống." };
-      if (isNaN(data.import_price) || data.import_price <= 0)
+      if (isNaN(data.import_price))
         errors.import_price = { message: "Giá nhập phải là số hợp lệ." };
       if (isNaN(data.vat) || data.vat < 0 || data.vat > 100)
         errors.vat = { message: "VAT phải là số từ 0 đến 100." };
-      if (isNaN(data.sell_price) || data.sell_price <= 0)
+      if (isNaN(data.sell_price))
         errors.sell_price = { message: "Giá bán phải là số hợp lệ." };
-      if (data.label_ids.length === 0)
-        errors.label_ids = { message: "Vui lòng chọn ít nhất một thẻ." };
+      // if (data.label_ids.length === 0)
+      //   errors.label_ids = { message: "Vui lòng chọn ít nhất một thẻ." };
 
       return {
         values: data,
@@ -82,14 +90,25 @@ export default function CreateProductForm({
       };
     },
   });
+
+  // Dùng useEffect để reset trạng thái dirty sau khi form mount
+  useEffect(() => {
+    // Gọi reset với các giá trị hiện tại, và đặt isDirty về false
+    reset(watch(), { keepValues: true, keepDirty: false });
+    // Dòng này chỉ chạy 1 lần sau khi mount
+  }, [reset]);
+
   useEffect(() => {
     setFormDirty(isDirty);
   }, [isDirty, setFormDirty]);
 
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const [isDraggingGallery, setIsDraggingGallery] = useState(false);
-  const [galleryPreviews, setGalleryPreviews] = useState<GalleryItem[]>([]);
+  const [galleryPreviews, setGalleryPreviews] = useState<GalleryItemFile[]>([]);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const [isDraggingThumbnail, setIsDraggingThumbnail] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -131,66 +150,131 @@ export default function CreateProductForm({
       : "0.00";
 
   const handleGalleryFilesSelect = (files: File[]) => {
-    const newGalleryItems: GalleryItem[] = [];
+    const newItems: GalleryItemFile[] = [];
+    const newFiles: File[] = [...galleryFiles]; // Bắt đầu với files cũ (nếu dùng state)
+
     files.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (reader.result) {
-          newGalleryItems.push({
-            url: reader.result as string,
-            name: file.name,
-            mimeType: file.type,
-          });
-          if (newGalleryItems.length === files.length) {
-            const updatedGallery = [...galleryPreviews, ...newGalleryItems];
-            setGalleryPreviews(updatedGallery);
-            setValue("gallery", updatedGallery);
-          }
-        }
+      const previewUrl = URL.createObjectURL(file);
+      const newItem: GalleryItemFile = {
+        id: crypto.randomUUID(), // Tạo ID duy nhất cho mỗi item
+        file: file,
+        previewUrl: previewUrl,
       };
-      reader.readAsDataURL(file);
+      newItems.push(newItem);
+      newFiles.push(file); // Thêm file gốc
     });
+
+    // 1. Cập nhật state preview
+    setGalleryPreviews((prev) => [...prev, ...newItems]);
+
+    // 2. Lưu MẢNG File gốc vào form
+    setValue("gallery", newFiles);
+    // setGalleryFiles(newFiles); // (Nếu dùng state)
   };
 
-  const handleThumbnailSelect = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (reader.result) {
-        setThumbnailPreview(reader.result as string);
-        setValue("thumbnail", reader.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
+  const handleThumbnailSelect = (file: File | undefined) => {
+    if (!file) {
+      setThumbnailPreview(null);
+      setValue("thumbnail", null); // Xóa File khỏi form
+      // setThumbnailFile(null); // (Nếu dùng state)
+      return;
+    }
+
+    // 1. Tạo URL xem trước tạm thời
+    const newPreviewUrl = URL.createObjectURL(file);
+
+    // 2. Lưu đối tượng File vào form (để upload sau này)
+    setValue("thumbnail", file);
+
+    // 3. Cập nhật state preview (để component hiển thị)
+    setThumbnailPreview(newPreviewUrl);
+    // setThumbnailFile(file); // (Nếu dùng state)
   };
 
   const handleRemoveThumbnail = () => {
+    // 1. Thu hồi URL để tránh rò rỉ bộ nhớ
+    if (thumbnailPreview) {
+      URL.revokeObjectURL(thumbnailPreview);
+    }
+
+    // 2. Xóa File khỏi form và reset preview
     setThumbnailPreview(null);
-    setValue("thumbnail", "");
+    setValue("thumbnail", null);
   };
 
-  const handleRemoveGalleryItem = (index: number) => {
-    const updatedGallery = galleryPreviews.filter((_, i) => i !== index);
-    setGalleryPreviews(updatedGallery);
-    setValue("gallery", updatedGallery);
+  const handleRemoveGalleryItem = (itemId: string) => {
+    setGalleryPreviews((prev) => {
+      const itemToRemove = prev.find((item) => item.id === itemId);
+      if (itemToRemove) {
+        URL.revokeObjectURL(itemToRemove.previewUrl); // Thu hồi URL
+      }
+      const updatedPreviews = prev.filter((item) => item.id !== itemId);
+
+      // 3. Cập nhật MẢNG File trong form/state sau khi xóa
+      const updatedFiles = updatedPreviews.map((item) => item.file);
+      setValue("gallery", updatedFiles);
+      // setGalleryFiles(updatedFiles); // (Nếu dùng state)
+
+      return updatedPreviews;
+    });
   };
 
-  const onSubmit = async (data: ProductCreateDTO) => {
+  const onSubmit = async (data: ProductFormType) => {
     setIsLoading(true);
     try {
-      console.log("Form data:", data);
-      onCreate(data);
+      // Vì onCreate là hàm async/Promise, ta cần await nó
+      await onCreate(data);
+
+      // 2. Reset trạng thái form (BẮT BUỘC để isDirty = false)
+      reset(data, {
+        keepValues: true, // Giữ các giá trị đã nhập (hoặc reset về default nếu muốn)
+        keepDirty: false, // <-- Đặt isDirty về false
+      });
+
       if (onSuccess) {
         onSuccess("Tạo sản phẩm thành công!");
-        onClose();
       }
+
+      // Dùng toast cho thông báo thành công (tùy chọn)
+      toast.success("Tạo sản phẩm thành công!", {
+        duration: 3000,
+        position: "top-right", // Đảm bảo Sonner được cấu hình để hỗ trợ vị trí này
+      });
     } catch (err) {
-      console.error(err);
+      // --- PHẦN XỬ LÝ TOAST ERROR ---
+      const errorMessage = getErrorMessage(err); // <-- Sử dụng hàm tiện ích
+
+      // Hiển thị toast lỗi (rớt từ trên phải xuống)
+      toast.error(errorMessage, {
+        duration: 5000, // Hiển thị lâu hơn lỗi thành công
+        position: "top-right", // Vị trí mong muốn: trên cùng bên phải
+      });
+
       if (onError) {
-        onError("Có lỗi xảy ra khi tạo sản phẩm.");
+        onError(errorMessage);
       }
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const getErrorMessage = (error: unknown): string => {
+    if (error instanceof Error) {
+      return error.message;
+    }
+    if (typeof error === "string") {
+      return error;
+    }
+    // Xử lý trường hợp đối tượng lỗi phức tạp từ fetch/http client
+    if (
+      error &&
+      typeof error === "object" &&
+      "message" in error &&
+      typeof error.message === "string"
+    ) {
+      return error.message;
+    }
+    return "Có lỗi không xác định xảy ra.";
   };
 
   const handleCancel = () => {
@@ -359,6 +443,7 @@ export default function CreateProductForm({
                   id="vat"
                   type="number"
                   step="0.01"
+                  defaultValue={0}
                   min={0}
                   {...register("vat", { valueAsNumber: true })}
                   placeholder="Nhập VAT"

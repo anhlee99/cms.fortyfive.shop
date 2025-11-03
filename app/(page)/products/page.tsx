@@ -57,11 +57,21 @@ export default function Page() {
 
   const handleAttemptClose = (isDirty: boolean) => {
     isFormDirtyRef.current = isDirty;
+
+    // Chỉ hiển thị dialog Xác nhận đóng khi:
+    // 1. Đang ở chế độ TẠO MỚI (selectedProduct == null)
+    // 2. Form CÓ THAY ĐỔI (isDirty == true)
     if (isDirty && !selectedProduct) {
       setIsConfirmDialogOpen(true);
     } else {
+      // Nếu không dirty HOẶC đang edit (edit có thể đóng ngay không cần dialog)
       setIsSidePanelOpen(false);
       setIsConfirmDialogOpen(false);
+      // Dọn dẹp state ngay lập tức nếu không mở dialog
+      if (!isDirty && !selectedProduct) {
+        setSelectedProduct(null);
+        isFormDirtyRef.current = false;
+      }
     }
   };
 
@@ -79,14 +89,21 @@ export default function Page() {
   };
 
   const handleSidePanelOpenChange = (open: boolean) => {
-    if (!open && isFormDirtyRef.current && !selectedProduct) {
-      setIsConfirmDialogOpen(true);
-    } else {
-      setIsSidePanelOpen(open);
-      if (!open) {
+    // Nếu panel đang đóng lại
+    if (!open) {
+      // Nếu đang ở chế độ TẠO MỚI, gọi handleAttemptClose để kiểm tra dirty
+      // Nếu đang ở chế độ CHỈNH SỬA, có thể đóng ngay
+      if (!selectedProduct) {
+        handleAttemptClose(isFormDirtyRef.current);
+      } else {
+        // Xử lý đóng khi ở chế độ xem/chỉnh sửa
+        setIsSidePanelOpen(false);
         setSelectedProduct(null);
         isFormDirtyRef.current = false;
       }
+    } else {
+      // Mở panel
+      setIsSidePanelOpen(open);
     }
   };
 
@@ -122,6 +139,9 @@ export default function Page() {
           onAttemptClose={handleAttemptClose}
           onSuccess={() => {
             console.log("Product created successfully!");
+            setIsSidePanelOpen(false);
+            setSelectedProduct(null);
+            isFormDirtyRef.current = false; // Reset trạng thái dirty trong ref của cha
           }}
           onError={(message) => {
             console.error(message);

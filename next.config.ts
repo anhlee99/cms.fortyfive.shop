@@ -6,11 +6,16 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'cms.fortyfive.shop',
-        pathname: '/**',
+        protocol: "https",
+        hostname: "cms.fortyfive.shop",
+        pathname: "/**",
       },
-    ]
+      {
+        protocol: "https",
+        hostname: "panel.fortyfive.shop",
+        pathname: "/**",
+      },
+    ],
   },
   // i18n: i18n,
 };

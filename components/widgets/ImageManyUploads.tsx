@@ -8,20 +8,15 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { IconUpload, IconX } from "@tabler/icons-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-interface GalleryItem {
-  url: string;
-  name: string;
-  mimeType: string;
-}
+import { GalleryItemFile } from "@/services/products/product.type";
 
 interface ImageManyUploadsProps {
   fieldName: string;
-  previews: GalleryItem[];
+  previews: GalleryItemFile[];
   isDragging: boolean;
   setIsDragging: (value: boolean) => void;
   onFilesSelect: (files: File[]) => void;
-  onRemove: (index: number) => void;
+  onRemove: (id: string) => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   label?: string;
   dragText?: string;
@@ -181,16 +176,16 @@ export function ImageManyUploads({
                   transition={{ duration: 0.2 }}
                   className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-border shadow-sm"
                 >
-                  {item.mimeType.startsWith("image/") ? (
+                  {item.file.type.startsWith("image/") ? (
                     <Image
-                      src={item.url}
-                      alt={`${item.name} preview`}
+                      src={item.previewUrl}
+                      alt={`${item.file.name} preview`}
                       fill
                       className="object-cover"
                     />
-                  ) : item.mimeType.startsWith("video/") ? (
+                  ) : item.file.type.startsWith("video/") ? (
                     <video
-                      src={item.url}
+                      src={item.previewUrl}
                       className="w-full h-full object-cover"
                       muted
                       loop
@@ -202,7 +197,7 @@ export function ImageManyUploads({
                     variant="destructive"
                     size="sm"
                     className="absolute top-1 right-1 p-1 rounded-full w-5 h-5 bg-destructive/80 text-white hover:bg-destructive"
-                    onClick={() => onRemove(index)}
+                    onClick={() => onRemove(item.id)}
                   >
                     <IconX className="w-3 h-3" />
                   </Button>

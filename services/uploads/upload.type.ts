@@ -1,4 +1,4 @@
 export interface UploadFileDTO {
-  path: string;
+  path?: string;
   file: File;
 }

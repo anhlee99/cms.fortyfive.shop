@@ -4,10 +4,12 @@ import { PaginatedResponse } from "@/types/pagination";
 import {
   Product,
   ProductCreateDTO,
+  ProductFormType,
   ProductSearchParams,
   ProductUpdateDTO,
 } from "@/services/products/product.type";
 import { list, create, getById, update } from "@/services/products/product.api";
+import { create as uploadFile } from "@/services/uploads/upload.api";
 import { useProductSearchUrl, normalizeSearch } from "./useProductsSearch";
 
 function keyFromParams(params?: ProductSearchParams) {
@@ -31,8 +33,31 @@ export function useProducts(initialData?: PaginatedResponse<Product>) {
     }
   );
 
-  const newProduct = async (payload: ProductCreateDTO) => {
-    const newProduct = await create(payload);
+  const newProduct = async (payload: ProductFormType) => {
+    const { thumbnail, gallery, ...restOfPayload } = payload;
+    const finalPayload: Partial<ProductCreateDTO> = { ...restOfPayload };
+    // handle upload file
+    if (thumbnail instanceof File) {
+      const uploadedImage = await uploadFile({ file: thumbnail });
+      finalPayload.thumbnail = uploadedImage.url;
+    }
+
+    if (Array.isArray(gallery)) {
+      const uploadedGallery = [];
+      for (const file of gallery) {
+        if (file instanceof File) {
+          const uploadedImage = await uploadFile({ file });
+          console.log("Uploaded gallery image:", uploadedImage);
+          uploadedGallery.push(uploadedImage.url);
+        } else if (typeof file === "string") {
+          // Nếu đã là URL, giữ nguyên
+          uploadedGallery.push(file);
+        }
+      }
+      finalPayload.gallery = uploadedGallery;
+    }
+
+    const newProduct = await create(finalPayload as ProductCreateDTO);
     await mutate();
     return newProduct;
   };

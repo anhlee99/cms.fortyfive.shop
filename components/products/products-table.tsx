@@ -154,9 +154,13 @@ export default function ProductsTable({
       },
     },
   ];
-  const [page, setPage] = useState(data?.pagination.page || 1);
-  const [pageSize, setPageSize] = useState(data?.pagination.pageSize || 10);
   const { params, setParams } = useProductSearchUrl();
+
+  // Đồng bộ state cục bộ với URL params
+  const [page, setPage] = useState(params.page || data?.pagination.page || 1);
+  const [pageSize, setPageSize] = useState(
+    params.limit || data?.pagination.pageSize || 10
+  );
 
   const [searchTerm, setSearchTerm] = useState(params.q || "");
 
@@ -169,8 +173,11 @@ export default function ProductsTable({
   }, [searchTerm]);
 
   useEffect(() => {
+    // Luôn đồng bộ state page cục bộ với dữ liệu API (nếu có)
     if (!data) return;
     setPage(data.pagination.page ?? 1);
+    // Đồng bộ pageSize từ data nếu params.limit chưa được set hoặc khác
+    setPageSize(data.pagination.pageSize ?? 10);
   }, [data]);
 
   if (!data) return <div className="skeleton-card"></div>;
@@ -197,7 +204,7 @@ export default function ProductsTable({
         pageSize={pageSize}
         setPageSize={(e) => {
           setPageSize(e);
-          setParams({ limit: e });
+          setParams({ limit: e, page: 1 });
         }}
         totalPages={data.pagination.totalPages}
         totalVendor={data.pagination.totalItems}

@@ -24,6 +24,12 @@ export interface GalleryItem {
   mimeType: string;
 }
 
+export interface GalleryItemFile {
+  id: string;
+  file: File;
+  previewUrl: string;
+}
+
 export type ProductCreateDTO = {
   agent_id?: string;
   product_code: string;
@@ -38,6 +44,13 @@ export type ProductCreateDTO = {
   display_price: number;
   label_ids: string[]; // Array of label IDs
 };
+
+export interface ProductFormType
+  extends Omit<ProductCreateDTO, "thumbnail" | "gallery"> {
+  // Ghi đè kiểu dữ liệu cho các trường hình ảnh
+  thumbnail: File | null;
+  gallery: File[] | null;
+}
 
 export type ProductUpdateDTO = Required<ProductCreateDTO> & {
   id: string;
