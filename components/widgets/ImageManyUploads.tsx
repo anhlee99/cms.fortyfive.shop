@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { IconUpload, IconX } from "@tabler/icons-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface GalleryItem {
   url: string;
@@ -45,6 +46,7 @@ export function ImageManyUploads({
     "video/quicktime",
     "video/webm",
   ];
+  const isMobile = useIsMobile();
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -120,14 +122,21 @@ export function ImageManyUploads({
       <Label htmlFor={fieldName} className="text-foreground font-medium mb-2">
         {label}
       </Label>
-      <div className="flex space-x-3 min-h-[300px]">
+      <div
+        className={cn(
+          "flex",
+          isMobile ? "flex-col space-y-4" : "flex-row space-x-4",
+          "min-h-[300px]"
+        )}
+      >
         <div
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={handleClick}
           className={cn(
-            "relative flex flex-col items-center justify-center p-6 rounded-lg border-2 border-dashed transition-colors h-auto text-center min-w-[300px] w-full",
+            "relative flex flex-col items-center justify-center p-6 rounded-lg border-2 border-dashed transition-colors h-auto text-center",
+            isMobile ? "min-w-0 w-full" : "min-w-[300px] w-auto",
             isDragging ? "border-primary bg-primary/10" : "border-border",
             "hover:border-primary hover:bg-primary/5 cursor-pointer"
           )}

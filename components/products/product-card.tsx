@@ -142,11 +142,10 @@ export default function ProductCard({
               <ArrowUpDown />
             </Button>
           </div>
+          <Button className="ml-auto mt-auto" onClick={onCreateClick}>
+            Tạo sản phẩm
+          </Button>
         </div>
-
-        <Button className="ml-auto mt-auto" onClick={onCreateClick}>
-          Tạo sản phẩm
-        </Button>
       </div>
       {paginatedProducts.length > 0 ? (
         paginatedProducts.map((product, index) => {
@@ -239,7 +238,7 @@ export default function ProductCard({
             onClick={() => setPage(1)}
             disabled={page === 1}
           >
-            Trang đầu
+            Đầu
           </Button>
           <Button
             variant="outline"
@@ -247,7 +246,7 @@ export default function ProductCard({
             onClick={() => setPage((p) => p - 1)}
             disabled={page <= 1}
           >
-            Trang trước
+            Trước
           </Button>
           <span className="text-sm text-muted-foreground font-semibold">
             Trang {page} /{" "}
@@ -259,7 +258,7 @@ export default function ProductCard({
             onClick={() => setPage((p) => p + 1)}
             disabled={page >= data.pagination.totalPages}
           >
-            Trang sau
+            Sau
           </Button>
           <Button
             variant="outline"
@@ -267,7 +266,7 @@ export default function ProductCard({
             onClick={() => setPage(data.pagination.totalPages)}
             disabled={page === data.pagination.totalPages}
           >
-            Trang cuối
+            Cuối
           </Button>
         </div>
         <div className="text-sm text-muted-foreground">
