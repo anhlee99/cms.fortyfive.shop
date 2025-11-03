@@ -170,7 +170,7 @@ export default function ProductsTable({
     }, 100);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm]);
+  }, [searchTerm, setParams]);
 
   useEffect(() => {
     // Luôn đồng bộ state page cục bộ với dữ liệu API (nếu có)

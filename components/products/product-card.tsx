@@ -50,7 +50,7 @@ export default function ProductCard({
     }, 100);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm]);
+  }, [searchTerm, setParams]);
 
   useEffect(() => {
     setProducts(data.data);

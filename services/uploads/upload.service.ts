@@ -4,9 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function create(input: UploadFileDTO): Promise<any> {
   const supabase = await createClient();
+  let filePath = input.path || "";
+
   const { data, error } = await supabase.storage
     .from("user-uploads")
-    .upload(input.path, input.file, {
+    .upload(filePath, input.file, {
       cacheControl: "3600",
       upsert: false,
     });

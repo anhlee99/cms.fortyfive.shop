@@ -14,7 +14,7 @@ import {
 } from "@/services/products/product.type";
 import { Label as LabelModle } from "@/services/labels/label.type";
 import { Textarea } from "../ui/textarea";
-import { ImageManyUploads } from "../widgets/ImageManyUploads";
+// import { ImageManyUploads } from"../widgets/ImageManyUploads";
 import { ImageUpload } from "../widgets/ImageUpload";
 import { LabelSelect } from "../labels/label-select";
 import Image from "next/image";
@@ -99,9 +99,9 @@ export default function DetailAndUpdateProductForm({
     },
   });
 
-  const galleryInputRef = useRef<HTMLInputElement>(null);
+  // const galleryInputRef = useRef<HTMLInputElement>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
-  const [isDraggingGallery, setIsDraggingGallery] = useState(false);
+  // const [isDraggingGallery, setIsDraggingGallery] = useState(false);
   const [isDraggingThumbnail, setIsDraggingThumbnail] = useState(false);
   const [galleryPreviews, setGalleryPreviews] = useState<GalleryItem[]>(
     product.gallery || []
@@ -169,28 +169,28 @@ export default function DetailAndUpdateProductForm({
       ? (((sellPrice - importPrice) / importPrice) * 100).toFixed(2)
       : "0.00";
 
-  const handleGalleryFilesSelect = (files: File[]) => {
-    const newGalleryItems: GalleryItem[] = [];
-    files.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (reader.result) {
-          newGalleryItems.push({
-            url: reader.result as string,
-            name: file.name,
-            mimeType: file.type,
-          });
-          if (newGalleryItems.length === files.length) {
-            const updatedGallery = [...galleryPreviews, ...newGalleryItems];
-            setGalleryPreviews(updatedGallery);
-            setValue("gallery", updatedGallery);
-            setEditingFields((prev) => ({ ...prev, gallery: false }));
-          }
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-  };
+  // const handleGalleryFilesSelect = (files: File[]) => {
+  //   const newGalleryItems: GalleryItem[] = [];
+  //   files.forEach((file) => {
+  //     const reader = new FileReader();
+  //     reader.onload = () => {
+  //       if (reader.result) {
+  //         newGalleryItems.push({
+  //           url: reader.result as string,
+  //           name: file.name,
+  //           mimeType: file.type,
+  //         });
+  //         if (newGalleryItems.length === files.length) {
+  //           const updatedGallery = [...galleryPreviews, ...newGalleryItems];
+  //           setGalleryPreviews(updatedGallery);
+  //           setValue("gallery", updatedGallery);
+  //           setEditingFields((prev) => ({ ...prev, gallery: false }));
+  //         }
+  //       }
+  //     };
+  //     reader.readAsDataURL(file);
+  //   });
+  // };
 
   const handleThumbnailSelect = (file: File) => {
     const reader = new FileReader();
@@ -210,14 +210,14 @@ export default function DetailAndUpdateProductForm({
     setEditingFields((prev) => ({ ...prev, thumbnail: true }));
   };
 
-  const handleRemoveGalleryItem = (index: number) => {
-    const updatedGallery = galleryPreviews.filter((_, i) => i !== index);
-    setGalleryPreviews(updatedGallery);
-    setValue("gallery", updatedGallery);
-    if (updatedGallery.length === 0) {
-      setEditingFields((prev) => ({ ...prev, gallery: true }));
-    }
-  };
+  // const handleRemoveGalleryItem = (index: number) => {
+  //   const updatedGallery = galleryPreviews.filter((_, i) => i !== index);
+  //   setGalleryPreviews(updatedGallery);
+  //   setValue("gallery", updatedGallery);
+  //   if (updatedGallery.length === 0) {
+  //     setEditingFields((prev) => ({ ...prev, gallery: true }));
+  //   }
+  // };
 
   const onSubmit = async (data: ProductUpdateDTO) => {
     setIsLoading(true);
@@ -547,7 +547,7 @@ export default function DetailAndUpdateProductForm({
                   </Button>
                 )}
               </div>
-              {editingFields.gallery ? (
+              {/* {editingFields.gallery ? (
                 <ImageManyUploads
                   fieldName="gallery"
                   previews={galleryPreviews}
@@ -589,7 +589,7 @@ export default function DetailAndUpdateProductForm({
                   label="Thư viện ảnh và video"
                   dragText="Kéo và thả hoặc nhấn để chọn ảnh hoặc video"
                 />
-              )}
+              )} */}
             </div>
           </div>
         </CardContent>

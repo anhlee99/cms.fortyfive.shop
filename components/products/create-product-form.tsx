@@ -37,7 +37,6 @@ export default interface ProductPayloadFile {
 
 export default function CreateProductForm({
   onCreate,
-  onClose,
   onSuccess,
   onError,
   onAttemptClose,
@@ -96,7 +95,7 @@ export default function CreateProductForm({
     // Gọi reset với các giá trị hiện tại, và đặt isDirty về false
     reset(watch(), { keepValues: true, keepDirty: false });
     // Dòng này chỉ chạy 1 lần sau khi mount
-  }, [reset]);
+  }, [reset, watch]);
 
   useEffect(() => {
     setFormDirty(isDirty);
@@ -106,8 +105,7 @@ export default function CreateProductForm({
   const [isDraggingGallery, setIsDraggingGallery] = useState(false);
   const [galleryPreviews, setGalleryPreviews] = useState<GalleryItemFile[]>([]);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
-  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [galleryFiles] = useState<File[]>([]);
 
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const [isDraggingThumbnail, setIsDraggingThumbnail] = useState(false);
